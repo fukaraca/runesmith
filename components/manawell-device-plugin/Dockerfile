@@ -14,7 +14,7 @@ FROM alpine AS runtime
 ARG FULL_VERSION="dev"
 
 LABEL name="manawell-device-plugin"
-LABEL org.opencontainers.image.source="https://github.com/fukaraca/runesmith/manawell-device-plugin"
+LABEL org.opencontainers.image.source="https://github.com/fukaraca/runesmith"
 LABEL org.opencontainers.image.authors="@fukaraca"
 LABEL org.opencontainers.image.version="${FULL_VERSION}"
 
