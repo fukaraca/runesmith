@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "manawell-device-plugin.fullname" . }}
+  labels:
+    {{- include "manawell-device-plugin.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-500"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  configFile: |
+    server:
+      socketPath: "{{ .Values.server.socketPath}}"
+      timeout: "{{ .Values.server.timeout}}"
+      address: "{{ .Values.server.address}}"
+      port: "{{ .Values.server.port}}"
+    mana:
+      maxMana: 100
+    monitoring:
+      metricsPort: "{{ .Values.monitoring.metricsPort}}"
+      updateInterval: "{{ .Values.monitoring.updateInterval}}"
+    kubelet:
+      socketPath: "{{ .Values.kubelet.socketPath}}"
+      retryAttempts: "{{ .Values.kubelet.retryAttempts}}"
+      backoffInterval: "{{ .Values.kubelet.backoffInterval}}"
+    log:
+      level: "info"
+      addSource: true
+    watcher:
+      resyncInterval: "{{ .Values.watcher.resyncInterval}}"
+      socketCheckInterval: "{{ .Values.watcher.socketCheckInterval}}"

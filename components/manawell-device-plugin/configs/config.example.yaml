@@ -1,0 +1,25 @@
+server:
+  socketPath: "/var/lib/kubelet/device-plugins/manawell.sock"
+  timeout: "10s"
+  address: "localhost"
+  port: "8080"
+mana:
+  maxMana: 100
+  energyType: "fire"
+  resourceName: "manawell.io/fire" # fire, frost, arcane
+monitoring:
+  metricsPort: 9090
+  updateInterval: "1s"
+kubelet:
+  socketPath: "/var/lib/kubelet/device-plugins/kubelet.sock"
+  retryAttempts: 5
+  backoffInterval: "5s"
+log:
+  level: "info"
+  addSource: true
+watcher:
+  resyncInterval: "2s"
+  socketCheckInterval: "5s"
+node:
+  name: ""
+  namespace: ""

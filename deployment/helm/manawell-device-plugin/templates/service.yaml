@@ -1,0 +1,21 @@
+{{- range $i, $e := .Values.energies }}
+  {{- if $e.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "manawell-device-plugin.fullname" $ }}-{{ $e.type }}
+  labels:
+    {{- include "manawell-device-plugin.labels" $ | nindent 4 }}
+    energy: {{ $e.type }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "manawell-device-plugin.labels" $ | nindent 4 }}
+    energy: {{ $e.type }}
+  ports:
+    - name: http
+      port: {{ $.Values.server.port }}
+      targetPort: {{ $.Values.server.port }}
+---
+{{- end }}
+{{- end }}
