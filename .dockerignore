@@ -1,0 +1,15 @@
+# VCS & IDE
+.git
+**/.git
+.idea
+
+# build artifacts
+**/bin
+**/dist
+**/build
+**/out
+
+# package caches
+**/node_modules
+**/.cache
+**/*.log

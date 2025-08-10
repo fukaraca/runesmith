@@ -20,7 +20,7 @@ var (
 
 func RootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:     "manawell-device-plugin",
+		Use:     "plugin",
 		Short:   "Kubernetes Device Plugin for Mana resources",
 		Long:    "A Kubernetes Device Plugin that manages magical(virtual) Mana resources for Runesmith project",
 		RunE:    func(cmd *cobra.Command, args []string) error { return runPlugin() },

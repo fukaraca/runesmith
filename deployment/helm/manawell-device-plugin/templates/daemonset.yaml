@@ -93,7 +93,7 @@ spec:
           configMap:
             name: {{ include "manawell-device-plugin.fullname" $ }}-{{ $e.type }}
             items:
-              - key: config.yaml
+              - key: configFile
                 path: config.yaml
 ---
 {{- end }}
