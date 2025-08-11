@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: enchantment-fire
+  labels:
+    energy: fire
+    workload-type: enchantment
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        energy: fire
+        workload-type: enchantment
+    spec:
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - key: "energy"
+          operator: "Equal"
+          value: "fire"
+          effect: "NoSchedule"
+      nodeSelector: # we don't need actually
+        energy: fire
+      containers:
+        - name: runesmith-enchanter
+          image: ghcr.io/fukaraca/runesmith-enchanter:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: POD_UID
+              valueFrom: { fieldRef: { fieldPath: metadata.uid } }
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            - name: TASK_ID
+              value: "unknown"
+            - name: ARTIFACT_ID
+              value: "unknown"
+            - name: ENCHANTMENT_COST
+              value: "20"
+            - name: SELF_REPORT
+              value: "true"
+            - name: HTTP_PORT
+              value: "8080"
+          resources:
+            limits:
+              "manawell.io/fire": "5"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 1

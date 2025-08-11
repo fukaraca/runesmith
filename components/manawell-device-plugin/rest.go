@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/fukaraca/runesmith/shared"
 )
 
 func (p *DevicePlugin) startHTTPServer() {
@@ -32,7 +34,7 @@ func (p *DevicePlugin) handleAllocation(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var ai AllocationInfo
+	var ai shared.AllocationInfo
 	if err := json.NewDecoder(r.Body).Decode(&ai); err != nil {
 		http.Error(w, "bad json", http.StatusBadRequest)
 		return

@@ -46,6 +46,8 @@ spec:
           env:
             - name: MANA_ENERGYTYPE
               value: "{{ $e.type }}"
+            - name: NODE_DAEMONSERVICENAME
+              value: "{{ include "manawell-device-plugin.fullname" $ }}-{{ $e.type }}"
             - name: NODE_NAME
               valueFrom:
                 fieldRef:

@@ -15,15 +15,7 @@ type ManaGer struct {
 	energyType  shared.Elemental
 	freeIDs     []string
 	allDevices  []*pluginapi.Device // in our case we won't encounter an unhealthy device, so no need to keep track of it
-	allocations map[string]AllocationInfo
-}
-
-type AllocationInfo struct {
-	PodUID    string   `json:"podUID"`
-	PodName   string   `json:"podName"`
-	Namespace string   `json:"namespace"`
-	DeviceIDs []string `json:"deviceIDs"`
-	Timestamp int64    `json:"timestamp"`
+	allocations map[string]shared.AllocationInfo
 }
 
 func NewManaGer(cfg ManaConfig) *ManaGer {
@@ -43,7 +35,7 @@ func NewManaGer(cfg ManaConfig) *ManaGer {
 		energyType:  cfg.EnergyType,
 		freeIDs:     freeIDs,
 		allDevices:  allDevices,
-		allocations: make(map[string]AllocationInfo),
+		allocations: make(map[string]shared.AllocationInfo),
 	}
 }
 
@@ -94,7 +86,7 @@ func (m *ManaGer) MapAllocations(podID, podName, namespace string, deviceIDs []s
 		m.freeIDs = append(m.freeIDs, v.DeviceIDs...)
 	}
 
-	m.allocations[podID] = AllocationInfo{
+	m.allocations[podID] = shared.AllocationInfo{
 		PodUID:    podID,
 		PodName:   podName,
 		Namespace: namespace,
@@ -118,18 +110,18 @@ func (m *ManaGer) ReleaseDevices(podUID string) error {
 	return nil
 }
 
-func (m *ManaGer) GetAllocation(podUID string) (AllocationInfo, bool) {
+func (m *ManaGer) GetAllocation(podUID string) (shared.AllocationInfo, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	allocation, exists := m.allocations[podUID]
 	return allocation, exists
 }
 
-func (m *ManaGer) GetAllAllocations() map[string]AllocationInfo {
+func (m *ManaGer) GetAllAllocations() map[string]shared.AllocationInfo {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	result := make(map[string]AllocationInfo)
+	result := make(map[string]shared.AllocationInfo)
 	for k, v := range m.allocations {
 		result[k] = v // slice modification may effect underlying array
 	}

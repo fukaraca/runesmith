@@ -3,5 +3,6 @@ go 1.24.5
 use (
 	./components/manawell-device-plugin
 	./components/runesmith-backend
+	./components/runesmith-enchanter
 	./shared
 )

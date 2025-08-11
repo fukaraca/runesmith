@@ -23,6 +23,7 @@ var envs = []string{
 	"mana.energyType",
 	"node.name",
 	"node.namespace",
+	"node.daemonServiceName",
 }
 
 func (c *Config) Load(filename, path string) error {
@@ -97,6 +98,7 @@ type WatcherConfig struct {
 }
 
 type NodeConfig struct {
-	Name      string `mapstructure:"name"`
-	Namespace string `mapstructure:"namespace"`
+	Name              string `mapstructure:"name"`
+	Namespace         string `mapstructure:"namespace"`
+	DaemonServiceName string `mapstructure:"daemonServiceName"`
 }

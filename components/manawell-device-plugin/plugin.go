@@ -231,9 +231,10 @@ func (p *DevicePlugin) Allocate(ctx context.Context, req *pluginapi.AllocateRequ
 
 		containerResponse := &pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				"MANA_ENERGY_TYPE": p.config.Mana.EnergyType.String(),
-				"MANA_DEVICE_IDS":  strings.Join(allocatedIDs, ","),
-				"MANA_COUNT":       fmt.Sprintf("%d", count),
+				"MANA_ENERGY_TYPE":    p.config.Mana.EnergyType.String(),
+				"MANA_DEVICE_IDS":     strings.Join(allocatedIDs, ","),
+				"MANA_COUNT":          fmt.Sprintf("%d", count),
+				"DAEMON_SERVICE_ADDR": fmt.Sprintf("http://%s:%s", p.config.Node.DaemonServiceName, p.config.Server.Port),
 			},
 		}
 
