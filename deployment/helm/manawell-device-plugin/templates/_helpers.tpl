@@ -36,9 +36,6 @@ Common labels
 {{- define "manawell-device-plugin.labels" -}}
 helm.sh/chart: {{ include "manawell-device-plugin.chart" . }}
 {{ include "manawell-device-plugin.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
