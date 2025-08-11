@@ -7,4 +7,4 @@ plugin-load-config:
 plugin-helm-template:
 	helm template deployment/helm/manawell-device-plugin
 plugin-docker-build:
-	docker build -f components/manawell-device-plugin/Dockerfile --build-arg FULL_VERSION=$(VERSION_PLUGIN).0 -t manawell-device-plugin:latest .
+	docker build --no-cache --debug -f components/manawell-device-plugin/Dockerfile --build-arg FULL_VERSION=$(VERSION_PLUGIN).0 -t manawell-device-plugin:latest .

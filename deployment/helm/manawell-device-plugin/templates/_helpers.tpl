@@ -34,7 +34,6 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "manawell-device-plugin.labels" -}}
-helm.sh/chart: {{ include "manawell-device-plugin.chart" . }}
 {{ include "manawell-device-plugin.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
