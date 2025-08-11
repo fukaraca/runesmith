@@ -43,6 +43,10 @@ func (p *DevicePlugin) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to cleanup previous socket: %w", err)
 	}
 
+	p.grpcServer = grpc.NewServer()
+	pluginapi.RegisterDevicePluginServer(p.grpcServer, p)
+	p.healthServer = NewHealthServer(p.grpcServer)
+
 	if err := p.serve(ctx); err != nil {
 		return fmt.Errorf("failed to start gRPC server: %w", err)
 	}
@@ -60,9 +64,6 @@ func (p *DevicePlugin) Start(ctx context.Context) error {
 	go p.watchKubeletRestart(ctx)
 
 	go p.startHTTPServer()
-
-	p.healthServer = NewHealthServer(p.grpcServer)
-	go p.healthServer.Start()
 
 	p.logger.Info("device plugin started successfully", slog.String("resource_name", p.config.Mana.ResourceName))
 	return nil
@@ -100,12 +101,11 @@ func (p *DevicePlugin) serve(ctx context.Context) error {
 		return fmt.Errorf("failed to listen on socket %s: %w", p.config.Server.SocketPath, err)
 	}
 
-	p.grpcServer = grpc.NewServer()
-	pluginapi.RegisterDevicePluginServer(p.grpcServer, p)
-
 	go func() {
+		p.healthServer.Start()
 		if err := p.grpcServer.Serve(sock); err != nil {
 			p.logger.Error("gRPC server error", err) // TODO errgroup or healthchecker
+			p.healthServer.Stop()
 		}
 	}()
 

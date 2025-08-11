@@ -20,10 +20,9 @@ func NewHealthServer(grpcServer *grpc.Server) *HealthServer {
 	return hs
 }
 
-func (h *HealthServer) Start() error {
+func (h *HealthServer) Start() {
 	grpc_health_v1.RegisterHealthServer(h.grpcServer, h.healthSrv)
 	h.healthSrv.SetServingStatus(service_name, grpc_health_v1.HealthCheckResponse_SERVING)
-	return nil
 }
 
 func (h *HealthServer) Stop() {
