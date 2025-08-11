@@ -7,7 +7,10 @@ COPY . .
 
 ENV GOWORK=auto
 WORKDIR /src/components/runesmith-enchanter
-RUN go build -v -ldflags="-X 'main.Version=${FULL_VERSION}'" -o /src/enchanter ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo \
+      -ldflags="-X 'main.Version=${FULL_VERSION:-dev}'" \
+      -o /src/enchanter ./
 
 FROM alpine AS runtime
 ARG FULL_VERSION="dev"
