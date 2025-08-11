@@ -5,6 +5,7 @@ ARG FULL_VERSION="dev"
 
 # go.work is annoying, use dockerignore to make it lean
 COPY . .
+RUN mkdir -p /out
 
 ENV GOWORK=auto
 WORKDIR /src/components/manawell-device-plugin
