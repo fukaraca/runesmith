@@ -50,7 +50,6 @@ func (p *DevicePlugin) Start(ctx context.Context) error {
 	if err := p.registerWithKubelet(ctx); err != nil {
 		return fmt.Errorf("failed to register with kubelet: %w", err)
 	}
-	go p.watchKubeletRestart(ctx)
 
 	var err error
 	p.watcher, err = NewPodWatcher(p.config, p.manager, p.logger)
@@ -58,6 +57,7 @@ func (p *DevicePlugin) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to create pod watcher: %w", err)
 	}
 	go p.watcher.Start(ctx)
+	go p.watchKubeletRestart(ctx)
 
 	go p.startHTTPServer()
 
