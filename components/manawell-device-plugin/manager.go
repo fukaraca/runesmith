@@ -32,7 +32,7 @@ func NewManaGer(cfg ManaConfig) *ManaGer {
 	for i := 1; i <= cfg.MaxMana; i++ { // TODO what to do on a restart ...
 		id := fmt.Sprintf("%s-%03d", cfg.EnergyType, i)
 		freeIDs[i-1] = id
-		allDevices[i] = &pluginapi.Device{
+		allDevices[i-1] = &pluginapi.Device{
 			ID:     id,
 			Health: pluginapi.Healthy,
 		}
