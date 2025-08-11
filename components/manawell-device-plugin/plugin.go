@@ -124,10 +124,7 @@ func (p *DevicePlugin) serve(ctx context.Context) error {
 
 func (p *DevicePlugin) registerWithKubelet(ctx context.Context) error {
 	conn, err := grpc.NewClient("unix://"+p.config.Kubelet.SocketPath,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
-			return net.DialTimeout("unix", addr, p.config.Server.Timeout)
-		}))
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("failed to dial kubelet socket: %w", err) // no need to retry just kill it
 	}
