@@ -133,9 +133,9 @@ func (pw *PodWatcher) onPodUpdate(oldObj, newObj any) {
 	}
 
 	if isTerminal(newPod) || newPod.DeletionTimestamp != nil {
+		pw.logger.Info("pod update: pod detected", slog.String("name", newPod.Name), slog.Any("status", newPod.Status.Phase))
 		pw.releasePodResources(newPod)
 	}
-	pw.logger.Info("pod update: pod detected", slog.String("name", newPod.Name), slog.Any("status", newPod.Status.Phase))
 }
 
 func (pw *PodWatcher) onPodDelete(obj any) {
@@ -167,7 +167,8 @@ func (pw *PodWatcher) releasePodResources(pod *v1.Pod) {
 		pw.logger.Debug("release failed", slog.String("name", pod.Name), slog.String("uid", podID), slog.Any("err", err))
 		return
 	}
-	pw.logger.Info("released mana", slog.String("name", pod.Name), slog.String("uid", podID))
+	pw.logger.Info("released mana", slog.String("name", pod.Name), slog.String("uid", podID),
+		slog.Int("allocated", pw.manager.GetAllocatedMana()), slog.Int("available", pw.manager.GetAvailableMana()))
 }
 
 func getKubernetesClient() (kubernetes.Interface, error) {
