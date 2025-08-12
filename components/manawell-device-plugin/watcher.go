@@ -135,7 +135,7 @@ func (pw *PodWatcher) onPodUpdate(oldObj, newObj any) {
 	if isTerminal(newPod) || newPod.DeletionTimestamp != nil {
 		pw.releasePodResources(newPod)
 	}
-	pw.logger.Info("pod update: pod detected", slog.String("name", newPod.Name))
+	pw.logger.Info("pod update: pod detected", slog.String("name", newPod.Name), slog.Any("status", newPod.Status.Phase))
 }
 
 func (pw *PodWatcher) onPodDelete(obj any) {

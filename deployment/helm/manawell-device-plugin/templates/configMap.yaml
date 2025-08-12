@@ -27,7 +27,7 @@ data:
       backoffInterval: "{{ $.Values.kubelet.backoffInterval}}"
     log:
       level: "info"
-      addSource: true
+      addSource: "{{ $.Values.log.addSource}}"
     watcher:
       resyncInterval: "{{ $.Values.watcher.resyncInterval}}"
       socketCheckInterval: "{{ $.Values.watcher.socketCheckInterval}}"
