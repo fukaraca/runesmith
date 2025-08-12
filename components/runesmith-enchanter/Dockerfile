@@ -7,11 +7,10 @@ COPY . .
 
 ENV GOWORK=auto
 WORKDIR /src/components/runesmith-enchanter
-RUN mkdir -p /out && \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo \
       -ldflags="-X 'main.Version=${FULL_VERSION:-dev}'" \
-      -o /out/enchanter ./
+      -o /src/enchanter ./
 
 FROM alpine AS runtime
 ARG FULL_VERSION="dev"
@@ -24,7 +23,7 @@ LABEL org.opencontainers.image.version="${FULL_VERSION}"
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 WORKDIR /app/runesmith-enchanter
-COPY --from=builder /out/enchanter ./
+COPY --from=builder /src/enchanter ./
 
 EXPOSE 8080
 

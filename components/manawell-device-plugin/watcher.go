@@ -122,9 +122,6 @@ func (pw *PodWatcher) onPodAdd(obj any) {
 	if !ok {
 		return
 	}
-	if !pw.shouldProcessPod(pod) {
-		return
-	}
 	// just for action
 	pw.logger.Info("pod add: pod detected", slog.String("name", pod.Name))
 }
@@ -134,23 +131,11 @@ func (pw *PodWatcher) onPodUpdate(oldObj, newObj any) {
 	if !ok {
 		return
 	}
-	if !pw.shouldProcessPod(newPod) {
-		return
-	}
 
 	if isTerminal(newPod) || newPod.DeletionTimestamp != nil {
 		pw.releasePodResources(newPod)
 	}
 	pw.logger.Info("pod update: pod detected", slog.String("name", newPod.Name))
-	fmt.Printf(
-		"Checking pod '%s/%s'. NodeName: '%s' (expected: '%s'). Labels: %v. Selector: %s\n",
-		newPod.Namespace,
-		newPod.Name,
-		newPod.Spec.NodeName,
-		pw.node.Name,
-		newPod.Labels,
-		pw.podSelector.String(),
-	)
 }
 
 func (pw *PodWatcher) onPodDelete(obj any) {
@@ -168,9 +153,7 @@ func (pw *PodWatcher) onPodDelete(obj any) {
 		}
 	}
 
-	if pw.shouldProcessPod(pod) {
-		pw.releasePodResources(pod) // it won't affect if it was already released onPodUpdate()
-	}
+	pw.releasePodResources(pod) // it won't affect if it was already released onPodUpdate()
 	pw.logger.Info("pod delete: pod detected", slog.String("name", pod.Name))
 }
 

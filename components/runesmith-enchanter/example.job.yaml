@@ -6,7 +6,7 @@ metadata:
     energy: fire
     workload-type: enchantment
 spec:
-  backoffLimit: 3
+  backoffLimit: 0
   template:
     metadata:
       labels:
