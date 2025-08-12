@@ -157,10 +157,6 @@ func (pw *PodWatcher) onPodDelete(obj any) {
 	pw.logger.Info("pod delete: pod detected", slog.String("name", pod.Name))
 }
 
-func (pw *PodWatcher) shouldProcessPod(pod *v1.Pod) bool {
-	return pod.Spec.NodeName == pw.node.Name && pw.podSelector.Matches(labels.Set(pod.Labels))
-}
-
 func isTerminal(pod *v1.Pod) bool {
 	switch pod.Status.Phase {
 	case v1.PodSucceeded, v1.PodFailed:
