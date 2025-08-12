@@ -155,7 +155,7 @@ kubelet:
   backoffInterval: "5s"
 log:
   level: "info"
-  addSource: true
+  addSource: false
 watcher:
   resyncInterval: "2s"
   socketCheckInterval: "5s"

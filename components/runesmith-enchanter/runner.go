@@ -18,7 +18,7 @@ func run() error {
 
 	logger := logg.New(logg.Config{
 		Level:     "info",
-		AddSource: true,
+		AddSource: false,
 	})
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL) // in case of preemption
 	defer cancel()

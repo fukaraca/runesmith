@@ -213,6 +213,8 @@ func (p *DevicePlugin) ListAndWatch(empty *pluginapi.Empty, stream pluginapi.Dev
 			if err := stream.Send(&pluginapi.ListAndWatchResponse{Devices: devices}); err != nil {
 				return err
 			}
+			p.logger.Info("stats",
+				slog.Int("allocated", p.manager.GetAllocatedMana()), slog.Int("available", p.manager.GetAvailableMana()))
 		}
 	}
 }
