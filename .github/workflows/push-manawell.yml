@@ -44,6 +44,7 @@ jobs:
       - name: Build and push Docker image for Manawell Device Plugin
         uses: docker/build-push-action@v3
         with:
+          platforms: linux/amd64 # minikube for now
           context: .
           file: ./components/manawell-device-plugin/Dockerfile
           build-args: |

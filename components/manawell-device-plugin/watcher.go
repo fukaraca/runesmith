@@ -158,17 +158,7 @@ func (pw *PodWatcher) onPodDelete(obj any) {
 }
 
 func isTerminal(pod *v1.Pod) bool {
-	switch pod.Status.Phase {
-	case v1.PodSucceeded, v1.PodFailed:
-		return true
-	}
-
-	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.State.Terminated != nil {
-			return true
-		}
-	}
-	return false
+	return pod.Status.Phase == v1.PodSucceeded || pod.Status.Phase == v1.PodFailed
 }
 
 func (pw *PodWatcher) releasePodResources(pod *v1.Pod) {
