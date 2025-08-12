@@ -142,6 +142,15 @@ func (pw *PodWatcher) onPodUpdate(oldObj, newObj any) {
 		pw.releasePodResources(newPod)
 	}
 	pw.logger.Info("pod update: pod detected", slog.String("name", newPod.Name))
+	fmt.Printf(
+		"Checking pod '%s/%s'. NodeName: '%s' (expected: '%s'). Labels: %v. Selector: %s\n",
+		newPod.Namespace,
+		newPod.Name,
+		newPod.Spec.NodeName,
+		pw.node.Name,
+		newPod.Labels,
+		pw.podSelector.String(),
+	)
 }
 
 func (pw *PodWatcher) onPodDelete(obj any) {
