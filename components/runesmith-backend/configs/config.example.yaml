@@ -1,0 +1,10 @@
+server:
+  address: ""
+  port: "8080"
+  maxBodySizeMB: 5
+  ginMode: "debug" # test, release, debug
+  sessionTimeout: 10m
+  defaultRequestTimeout: 30s
+log:
+  level: "info"
+  addSource: false

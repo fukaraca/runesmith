@@ -42,7 +42,7 @@ jobs:
       - name: Build and push Docker image for Runesmith Enchanter
         uses: docker/build-push-action@v3
         with:
-          platforms: linux/amd64 # minikube for now
+          platforms: linux/amd64 # minikube for now, aws may fail depending on ami
           context: .
           file: ./components/runesmith-enchanter/Dockerfile
           build-args: |

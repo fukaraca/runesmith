@@ -25,7 +25,7 @@ spec:
         energy: fire
       containers:
         - name: runesmith-enchanter
-          image: ghcr.io/fukaraca/runesmith-enchanter:latest # TODO fix latest issue
+          image: ghcr.io/fukaraca/runesmith-enchanter:1.0.8 # TODO do not leave with latest tag
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
