@@ -11,7 +11,7 @@ RUN mkdir -p /out && \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo \
       -ldflags="-X 'main.Version=${FULL_VERSION:-dev}'" \
-      -o /out/server ./
+      -o /out/server ./cmd/server
 
 FROM alpine AS runtime
 ARG FULL_VERSION="dev"

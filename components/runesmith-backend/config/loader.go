@@ -21,7 +21,6 @@ type Server struct {
 	Port                  string        `mapstructure:"port"`
 	MaxBodySizeMB         int           `mapstructure:"maxBodySizeMB"`
 	GinMode               string        `mapstructure:"ginMode"`
-	SessionTimeout        time.Duration `mapstructure:"sessionTimeout"`
 	DefaultRequestTimeout time.Duration `mapstructure:"defaultRequestTimeout"`
 	Version               string
 }
@@ -36,7 +35,7 @@ func (c *Config) Load(filename, path string) error {
 	v := viper.New()
 	v.SetConfigName(filename)
 	v.AddConfigPath(path)
-	v.SetConfigType("yml")
+	v.SetConfigType("yaml")
 
 	v.AllowEmptyEnv(true)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
