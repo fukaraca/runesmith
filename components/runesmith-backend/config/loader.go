@@ -4,14 +4,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fukaraca/runesmith/shared"
 	logg "github.com/fukaraca/runesmith/shared/log"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	ServiceMode string
-	Server      Server      `mapstructure:"server"`
-	Log         logg.Config `mapstructure:"log"`
+	Server      Server               `mapstructure:"server"`
+	Log         logg.Config          `mapstructure:"log"`
+	Items       []shared.MagicalItem `mapstructure:"magicalItems"`
 }
 
 type Server struct {

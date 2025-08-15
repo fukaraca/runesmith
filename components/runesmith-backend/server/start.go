@@ -23,7 +23,7 @@ func Start(cfg *config.Config) error {
 		return err
 	}
 	server.bindRoutes()
-	gb.GuestBook = gb.New()
+	gb.GuestBook = gb.New() // do we really get benefit
 
 	logger.Info("Server started")
 	httpServer := &http.Server{

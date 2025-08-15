@@ -8,3 +8,347 @@ server:
 log:
   level: "info"
   addSource: false
+
+magicalItems:
+  - id: 1
+    name: "Ember Blade"
+    tier: "Common"
+    requirements:
+      fire: 2
+    priority: 1
+
+  - id: 2
+    name: "Frost Shard"
+    tier: "Common"
+    requirements:
+      frost: 2
+    priority: 1
+
+  - id: 3
+    name: "Mystic Crystal"
+    tier: "Common"
+    requirements:
+      arcane: 2
+    priority: 1
+
+  - id: 4
+    name: "Burning Ice Dagger"
+    tier: "Common"
+    requirements:
+      fire: 1
+      frost: 1
+    priority: 1
+
+  - id: 5
+    name: "Arcane Flame Ring"
+    tier: "Common"
+    requirements:
+      fire: 1
+      arcane: 1
+    priority: 1
+
+  - id: 6
+    name: "Glacial Rune Stone"
+    tier: "Common"
+    requirements:
+      frost: 1
+      arcane: 1
+    priority: 1
+
+  - id: 7
+    name: "Balanced Trinity Charm"
+    tier: "Common"
+    requirements:
+      fire: 1
+      frost: 1
+      arcane: 1
+    priority: 1
+
+  - id: 8
+    name: "Scorching Wand"
+    tier: "Common"
+    requirements:
+      fire: 2
+      frost: 1
+    priority: 1
+
+  - id: 9
+    name: "Frozen Arcane Orb"
+    tier: "Common"
+    requirements:
+      frost: 2
+      arcane: 1
+    priority: 1
+
+  - id: 10
+    name: "Elemental Spark Gem"
+    tier: "Common"
+    requirements:
+      fire: 2
+      frost: 2
+      arcane: 2
+    priority: 1
+
+  - id: 11
+    name: "Inferno Greatsword"
+    tier: "Rare"
+    requirements:
+      fire: 3
+      arcane: 3
+    priority: 1
+
+  - id: 12
+    name: "Blizzard Staff"
+    tier: "Rare"
+    requirements:
+      frost: 3
+      arcane: 3
+    priority: 1
+
+  - id: 13
+    name: "Pure Arcane Tome"
+    tier: "Rare"
+    requirements:
+      fire: 3
+      frost: 3
+    priority: 1
+
+  - id: 14
+    name: "Molten Ice Shield"
+    tier: "Rare"
+    requirements:
+      fire: 2
+      frost: 2
+      arcane: 2
+    priority: 1
+
+  - id: 15
+    name: "Glacial Fire Hammer"
+    tier: "Rare"
+    requirements:
+      fire: 3
+      frost: 2
+      arcane: 1
+    priority: 1
+
+  - id: 16
+    name: "Arcane Frost Bow"
+    tier: "Rare"
+    requirements:
+      fire: 1
+      frost: 3
+      arcane: 2
+    priority: 1
+
+  - id: 17
+    name: "Tri-Element Gauntlets"
+    tier: "Rare"
+    requirements:
+      fire: 2
+      frost: 2
+      arcane: 3
+    priority: 1
+
+  - id: 18
+    name: "Volcanic Ice Armor"
+    tier: "Rare"
+    requirements:
+      fire: 3
+      frost: 3
+      arcane: 1
+    priority: 1
+
+  - id: 19
+    name: "Mystic Flame Cape"
+    tier: "Rare"
+    requirements:
+      fire: 2
+      frost: 1
+      arcane: 3
+    priority: 1
+
+  - id: 20
+    name: "Frozen Arcane Crown"
+    tier: "Rare"
+    requirements:
+      fire: 1
+      frost: 2
+      arcane: 3
+    priority: 1
+
+  - id: 21
+    name: "Dragon Fire Claymore"
+    tier: "Epic"
+    requirements:
+      fire: 4
+      arcane: 4
+    priority: 1
+
+  - id: 22
+    name: "Eternal Frost Spear"
+    tier: "Epic"
+    requirements:
+      frost: 4
+      arcane: 4
+    priority: 1
+
+  - id: 23
+    name: "Void Arcane Scepter"
+    tier: "Epic"
+    requirements:
+      fire: 4
+      frost: 4
+    priority: 1
+
+  - id: 24
+    name: "Equilibrium Battle Axe"
+    tier: "Epic"
+    requirements:
+      fire: 3
+      frost: 3
+      arcane: 2
+    priority: 1
+
+  - id: 25
+    name: "Phoenix Ice Wings"
+    tier: "Epic"
+    requirements:
+      fire: 4
+      frost: 2
+      arcane: 2
+    priority: 1
+
+  - id: 26
+    name: "Glacial Mystic Robes"
+    tier: "Epic"
+    requirements:
+      fire: 2
+      frost: 4
+      arcane: 2
+    priority: 1
+
+  - id: 27
+    name: "Tri-Force Legendary Blade"
+    tier: "Epic"
+    requirements:
+      fire: 3
+      frost: 3
+      arcane: 3
+    priority: 1
+
+  - id: 28
+    name: "Magma Frost Boots"
+    tier: "Epic"
+    requirements:
+      fire: 4
+      frost: 3
+      arcane: 1
+    priority: 1
+
+  - id: 29
+    name: "Arcane Storm Helmet"
+    tier: "Epic"
+    requirements:
+      fire: 1
+      frost: 3
+      arcane: 4
+    priority: 1
+
+  - id: 30
+    name: "Elemental Master Ring"
+    tier: "Epic"
+    requirements:
+      fire: 4
+      frost: 4
+      arcane: 4
+    priority: 1
+
+  - id: 31
+    name: "Apocalypse Flame Sword"
+    tier: "Legendary"
+    requirements:
+      fire: 6
+      frost: 3
+      arcane: 6
+    priority: 2
+
+  - id: 32
+    name: "Absolute Zero Staff"
+    tier: "Legendary"
+    requirements:
+      fire: 3
+      frost: 6
+      arcane: 6
+    priority: 2
+
+  - id: 33
+    name: "Reality Arcane Grimoire"
+    tier: "Legendary"
+    requirements:
+      fire: 6
+      frost: 6
+      arcane: 3
+    priority: 2
+
+  - id: 34
+    name: "Genesis Trinity Armor"
+    tier: "Legendary"
+    requirements:
+      fire: 5
+      frost: 5
+      arcane: 5
+    priority: 2
+
+  - id: 35
+    name: "World-breaker Chaos Hammer"
+    tier: "Legendary"
+    requirements:
+      fire: 6
+      frost: 4
+      arcane: 5
+    priority: 2
+
+  - id: 36
+    name: "Eternal Winter Bow"
+    tier: "Legendary"
+    requirements:
+      fire: 4
+      frost: 6
+      arcane: 5
+    priority: 2
+
+  - id: 37
+    name: "Omni-mage Supreme Crown"
+    tier: "Legendary"
+    requirements:
+      fire: 5
+      frost: 4
+      arcane: 6
+    priority: 2
+
+  - id: 38
+    name: "God-slayer Elemental Blade"
+    tier: "Legendary"
+    requirements:
+      fire: 6
+      frost: 6
+      arcane: 6
+    priority: 2
+
+  - id: 39
+    name: "Cosmic Fire Shield"
+    tier: "Legendary"
+    requirements:
+      fire: 6
+      frost: 2
+      arcane: 6
+    priority: 1
+
+  - id: 40
+    name: "Universe Frost Gauntlets"
+    tier: "Legendary"
+    requirements:
+      fire: 3
+      frost: 6
+      arcane: 6
+    priority: 2
