@@ -17,3 +17,4 @@ data:
       ginMode: "{{ .Values.server.ginMode }}"
       defaultRequestTimeout: 30s
     magicalItems: {{ toYaml .Values.magicalItems | nindent 4 }}
+    devicePlugin: {{ toYaml .Values.devicePlugin | nindent 6 }}

@@ -46,15 +46,15 @@ spec:
             - "--config"
             - "config.yaml"
           env:
-            - name: NODE_NAME
+            - name: META_NODENAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: POD_NAME
+            - name: META_PODNAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: NODE_NAMESPACE
+            - name: META_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace

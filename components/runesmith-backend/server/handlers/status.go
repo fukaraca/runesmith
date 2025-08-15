@@ -7,5 +7,11 @@ import (
 )
 
 func (r *Rest) Status(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	statuses, err := r.svc.Status(c.Request.Context())
+	if err != nil {
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": statuses})
 }

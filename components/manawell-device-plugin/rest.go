@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/fukaraca/runesmith/shared"
@@ -52,4 +54,29 @@ func (p *DevicePlugin) handleHealthz(w http.ResponseWriter, r *http.Request) {
 func (p *DevicePlugin) handleReadyz(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	w.Write([]byte("ok"))
+}
+
+func (p *DevicePlugin) handleStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	status := shared.NodeStatus{
+		Name:        fmt.Sprintf("%s-(%s)", p.config.Node.Name, p.config.Mana.EnergyType),
+		Available:   p.manager.GetAvailableMana(),
+		Allocated:   p.manager.GetAllocatedMana(),
+		RunningJobs: len(p.manager.allocations),
+	}
+	if _, err := os.Stat(p.config.Kubelet.SocketPath); err == nil {
+		status.Healthy = true
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		http.Error(w, "failed to write response", http.StatusInternalServerError)
+		return
+	}
 }

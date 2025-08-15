@@ -20,6 +20,9 @@ type Client struct {
 }
 
 func NewInCluster(namespace string) (*Client, error) {
+	if namespace == "" { // to test locally
+		return nil, nil
+	}
 	cfg, err := rest.InClusterConfig() // todo KUBERNETES_SERVICE_HOST and Port must be set on local
 	if err != nil {
 		return nil, err

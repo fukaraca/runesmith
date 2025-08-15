@@ -150,7 +150,12 @@ server:
   maxBodySizeMB: 25
   ginMode: "release" # test, release, debug
   defaultRequestTimeout: 30s
-
+devicePlugin:
+  port: "8080"
+  services: # headless services
+    - manawell-device-plugin-fire
+    - manawell-device-plugin-frost
+    - manawell-device-plugin-arcane
 
 magicalItems:
   - id: 1

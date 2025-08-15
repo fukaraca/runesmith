@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	ServiceMode string
-	Server      Server               `mapstructure:"server"`
-	Log         logg.Config          `mapstructure:"log"`
-	Items       []shared.MagicalItem `mapstructure:"magicalItems"`
+	Server   Server               `mapstructure:"server"`
+	Log      logg.Config          `mapstructure:"log"`
+	Items    []shared.MagicalItem `mapstructure:"magicalItems"`
+	Metadata Meta                 `mapstructure:"meta"`
+	Plugin   Plugin               `mapstructure:"devicePlugin"`
 }
 
 type Server struct {
@@ -25,11 +26,26 @@ type Server struct {
 	Version               string
 }
 
+type Meta struct {
+	NodeName  string
+	PodName   string
+	Namespace string
+}
+
+type Plugin struct {
+	Services []string
+	Port     string
+}
+
 func NewConfig() *Config {
 	return &Config{}
 }
 
-var envs = []string{}
+var envs = []string{
+	"meta.nodeName",
+	"meta.podName",
+	"meta.namespace",
+}
 
 func (c *Config) Load(filename, path string) error {
 	v := viper.New()

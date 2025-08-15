@@ -15,7 +15,7 @@ import (
 )
 
 func Start(cfg *config.Config) error {
-	logger := logg.New(cfg.Log).With("service mode", cfg.ServiceMode)
+	logger := logg.New(cfg.Log)
 	router := NewRouter(cfg.Server, logger)
 	router.SetTrustedProxies(nil)
 	server, err := NewServer(cfg, router, logger)

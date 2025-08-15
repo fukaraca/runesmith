@@ -54,3 +54,11 @@ const (
 	CompletedAS   ArtifactStatus = "Completed"
 	DeletedAS     ArtifactStatus = "Deleted"
 )
+
+type NodeStatus struct {
+	Name        string
+	Available   int
+	Allocated   int
+	Healthy     bool
+	RunningJobs int
+}

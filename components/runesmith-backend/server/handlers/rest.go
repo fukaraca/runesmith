@@ -11,7 +11,7 @@ type ItemsService interface {
 	AllItems() []shared.MagicalItem
 	Forge(ctx context.Context) (string, error)
 	GetArtifacts(completed bool) []service.Artifact
-	Status()
+	Status(ctx context.Context) ([]shared.NodeStatus, error)
 }
 
 type Rest struct {
