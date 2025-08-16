@@ -16,7 +16,7 @@ import (
 )
 
 type Client struct {
-	cs        kubernetes.Interface
+	set       kubernetes.Interface
 	Namespace string
 }
 
@@ -32,7 +32,7 @@ func NewInCluster(namespace string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{cs: cs, Namespace: namespace}, nil
+	return &Client{set: cs, Namespace: namespace}, nil
 }
 
 func (c *Client) CreateFireEnchantmentJob( // temporary method for now until CRD implemented
@@ -142,5 +142,5 @@ func (c *Client) CreateFireEnchantmentJob( // temporary method for now until CRD
 		},
 	}
 
-	return c.cs.BatchV1().Jobs(c.Namespace).Create(ctx, job, metav1.CreateOptions{})
+	return c.set.BatchV1().Jobs(c.Namespace).Create(ctx, job, metav1.CreateOptions{})
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net"
@@ -33,11 +34,18 @@ func Start(cfg *config.Config) error {
 	}
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
+
 	go func() {
 		<-quit
 		logger.Warn("received interrupt signal")
 		if errInner := httpServer.Close(); errInner != nil {
 			log.Fatal("Server Close:", errInner)
+		}
+	}()
+
+	go func() {
+		if errInner := server.Service.Tracker.Start(context.Background()); errInner != nil {
+			log.Fatalf("tracker failed %v", errInner)
 		}
 	}()
 
@@ -48,7 +56,7 @@ func Start(cfg *config.Config) error {
 			log.Fatal("Server closed unexpectedly")
 		}
 	}
-
+	server.Service.Tracker.Stop()
 	logger.Info("Server shutting down")
 	return nil
 }

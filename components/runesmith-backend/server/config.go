@@ -25,7 +25,10 @@ func NewServer(cfg *config.Config, engine *gin.Engine, logger *slog.Logger) (*Se
 	if err != nil {
 		return nil, err
 	}
-	svc := service.New(apiClient, cfg.Items, cfg.Plugin, cfg.Enchanter)
+	svc, err := service.New(apiClient, cfg.Items, cfg.Plugin, cfg.Enchanter, &cfg.Metadata, logger)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Server{
 		Config:  cfg,

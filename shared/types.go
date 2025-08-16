@@ -52,6 +52,7 @@ const (
 	PrioritizedAS ArtifactStatus = "Prioritized"
 	EnchantingAS  ArtifactStatus = "Enchanting"
 	CompletedAS   ArtifactStatus = "Completed"
+	FailedAS      ArtifactStatus = "Failed"
 	DeletedAS     ArtifactStatus = "Deleted"
 )
 
