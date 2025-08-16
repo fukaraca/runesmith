@@ -10,11 +10,12 @@ import (
 )
 
 type Config struct {
-	Server   Server               `mapstructure:"server"`
-	Log      logg.Config          `mapstructure:"log"`
-	Items    []shared.MagicalItem `mapstructure:"magicalItems"`
-	Metadata Meta                 `mapstructure:"meta"`
-	Plugin   Plugin               `mapstructure:"devicePlugin"`
+	Server    Server               `mapstructure:"server"`
+	Log       logg.Config          `mapstructure:"log"`
+	Items     []shared.MagicalItem `mapstructure:"magicalItems"`
+	Metadata  Meta                 `mapstructure:"meta"`
+	Plugin    Plugin               `mapstructure:"devicePlugin"`
+	Enchanter Enchanter            `mapstructure:"enchanter"`
 }
 
 type Server struct {
@@ -30,6 +31,11 @@ type Meta struct {
 	NodeName  string
 	PodName   string
 	Namespace string
+}
+
+type Enchanter struct {
+	Image string
+	Cost  int
 }
 
 type Plugin struct {

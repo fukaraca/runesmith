@@ -18,6 +18,7 @@ func (p *DevicePlugin) startHTTPServer() {
 	mux.HandleFunc("/v1/allocations", p.handleAllocation)
 	mux.HandleFunc("/healthz", p.handleHealthz)
 	mux.HandleFunc("/readyz", p.handleReadyz)
+	mux.HandleFunc("/status", p.handleStatus)
 	srv := &http.Server{
 		Addr:              net.JoinHostPort(p.config.Server.Address, p.config.Server.Port),
 		Handler:           mux,

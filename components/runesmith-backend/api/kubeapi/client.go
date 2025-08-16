@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/fukaraca/runesmith/components/runesmith-backend/config"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -37,8 +38,7 @@ func NewInCluster(namespace string) (*Client, error) {
 func (c *Client) CreateFireEnchantmentJob( // temporary method for now until CRD implemented
 	ctx context.Context,
 	artifactID int,
-	enchanterImage string,
-	enchantmentCost int,
+	enc config.Enchanter,
 ) (*batchv1.Job, error) {
 	if c.Namespace == "" {
 		return nil, fmt.Errorf("namespace must be set")
@@ -81,7 +81,7 @@ func (c *Client) CreateFireEnchantmentJob( // temporary method for now until CRD
 					Containers: []corev1.Container{
 						{
 							Name:            "runesmith-enchanter",
-							Image:           enchanterImage,
+							Image:           enc.Image,
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Ports: []corev1.ContainerPort{
 								{Name: "http", ContainerPort: 8080},
@@ -106,7 +106,7 @@ func (c *Client) CreateFireEnchantmentJob( // temporary method for now until CRD
 									},
 								},
 								{Name: "ARTIFACT_ID", Value: strconv.Itoa(artifactID)},
-								{Name: "ENCHANTMENT_COST", Value: strconv.Itoa(enchantmentCost)},
+								{Name: "ENCHANTMENT_COST", Value: strconv.Itoa(enc.Cost)},
 								{Name: "SELF_REPORT", Value: "true"},
 								{Name: "HTTP_PORT", Value: "8080"},
 							},

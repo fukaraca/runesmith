@@ -9,22 +9,24 @@ import (
 )
 
 type Service struct {
-	depot   *artifactory
-	Items   []shared.MagicalItem
-	counter atomic.Uint64
-	kubeApi *kubeapi.Client
-	plugin  config.Plugin
+	depot     *artifactory
+	Items     []shared.MagicalItem
+	counter   atomic.Uint64
+	kubeApi   *kubeapi.Client
+	plugin    config.Plugin
+	enchanter config.Enchanter
 }
 
 func (s *Service) nextID() int {
 	return int(s.counter.Add(1))
 }
 
-func New(api *kubeapi.Client, items []shared.MagicalItem, plugin config.Plugin) *Service {
+func New(api *kubeapi.Client, items []shared.MagicalItem, plugin config.Plugin, enchanter config.Enchanter) *Service {
 	return &Service{
-		Items:   items,
-		depot:   newArtifactory(),
-		kubeApi: api,
-		plugin:  plugin,
+		Items:     items,
+		depot:     newArtifactory(),
+		kubeApi:   api,
+		plugin:    plugin,
+		enchanter: enchanter,
 	}
 }

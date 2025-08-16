@@ -18,3 +18,4 @@ data:
       defaultRequestTimeout: 30s
     magicalItems: {{ toYaml .Values.magicalItems | nindent 4 }}
     devicePlugin: {{ toYaml .Values.devicePlugin | nindent 6 }}
+    enchanter: {{ toYaml .Values.enchanter | nindent 6}}

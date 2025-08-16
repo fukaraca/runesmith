@@ -21,7 +21,7 @@ func (s *Service) Forge(ctx context.Context) (string, error) {
 		Status:    shared.ScheduledAS,
 	}
 
-	job, err := s.kubeApi.CreateFireEnchantmentJob(ctx, art.ID, "ghcr.io/fukaraca/runesmith-enchanter:1.0.8", 20)
+	job, err := s.kubeApi.CreateFireEnchantmentJob(ctx, art.ID, s.enchanter)
 	if err != nil {
 		return "", err
 	}

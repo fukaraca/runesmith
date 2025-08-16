@@ -13,6 +13,9 @@ devicePlugin:
     - manawell-device-plugin-fire
     - manawell-device-plugin-frost
     - manawell-device-plugin-arcane
+enchanter:
+  image: "ghcr.io/fukaraca/runesmith-enchanter:1.0.11"
+  cost: 20
 
 magicalItems:
   - id: 1

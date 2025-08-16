@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "manawell-device-plugin.fullname" $ }}-{{ $e.type }}
+  name: {{ include "manawell-device-plugin.name" $ }}-{{ $e.type }}
   labels:
     {{- include "manawell-device-plugin.labels" $ | nindent 4 }}
     energy: {{ $e.type }}
