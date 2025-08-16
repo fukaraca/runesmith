@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "runesmith-backend.fullname" . }}
   labels:
-    {{- include "runesmith-backend.fullname" . | nindent 4 }}
+    {{- include "runesmith-backend.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-500"
