@@ -12,6 +12,8 @@ import (
 	"github.com/fukaraca/runesmith/shared"
 )
 
+const statusAPIPlugin = "v1/status"
+
 func (s *Service) Status(ctx context.Context) ([]shared.NodeStatus, error) {
 	logger := middlewares.GetLoggerFromContext(ctx)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
@@ -19,12 +21,7 @@ func (s *Service) Status(ctx context.Context) ([]shared.NodeStatus, error) {
 	out := make([]shared.NodeStatus, len(s.plugin.Services))
 	p := s.plugin
 	for i := 0; i < len(p.Services); i++ {
-		defer func() {
-			if out[i].Name == "" {
-				out[i].Name = p.Services[i]
-			}
-		}()
-		url := fmt.Sprintf("http://%s:%s", p.Services[i], p.Port)
+		url := fmt.Sprintf("http://%s:%s/%s", p.Services[i], p.Port, statusAPIPlugin)
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
 			logger.Error("NewRequestWithContext failed", err)

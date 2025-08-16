@@ -23,7 +23,9 @@ func LoggerMw(logger *slog.Logger) gin.HandlerFunc {
 	return sloggin.NewWithConfig(logger, sloggin.Config{
 		WithUserAgent: true,
 		WithRequestID: true,
-		Filters:       []sloggin.Filter{doNotLogIfNoErr("/healthz")},
+		Filters: []sloggin.Filter{
+			doNotLogIfNoErr("/healthz"),
+			doNotLogIfNoErr("/readyz")},
 	})
 }
 

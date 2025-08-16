@@ -18,7 +18,7 @@ func (p *DevicePlugin) startHTTPServer() {
 	mux.HandleFunc("/v1/allocations", p.handleAllocation)
 	mux.HandleFunc("/healthz", p.handleHealthz)
 	mux.HandleFunc("/readyz", p.handleReadyz)
-	mux.HandleFunc("/status", p.handleStatus)
+	mux.HandleFunc("/v1/status", p.handleStatus)
 	srv := &http.Server{
 		Addr:              net.JoinHostPort(p.config.Server.Address, p.config.Server.Port),
 		Handler:           mux,
@@ -48,12 +48,12 @@ func (p *DevicePlugin) handleAllocation(w http.ResponseWriter, r *http.Request) 
 }
 
 func (p *DevicePlugin) handleHealthz(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
 
 func (p *DevicePlugin) handleReadyz(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
 
@@ -70,7 +70,8 @@ func (p *DevicePlugin) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := os.Stat(p.config.Kubelet.SocketPath); err == nil {
 		status.Healthy = true
-		return
+	} else {
+		p.logger.Warn("kubelet socket check failed", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
