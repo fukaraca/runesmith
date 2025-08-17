@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "runesmith-backend.fullname" . }}
+  name: {{ include "runesmith-backend.name" . }}
   labels:
     {{- include "runesmith-backend.labels" . | nindent 4 }}
 spec:

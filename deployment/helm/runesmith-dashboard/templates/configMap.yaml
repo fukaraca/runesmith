@@ -17,7 +17,7 @@ data:
       index index.html;
 
       location /api/ {
-        proxy_pass http://{{ .Values.backend.serviceName }}:{{ .Values.backend.servicePort }}/;
+        proxy_pass http://{{ .Values.backend.serviceName }}:{{ .Values.backend.servicePort }}/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

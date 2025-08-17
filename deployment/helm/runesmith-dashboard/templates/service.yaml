@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "runesmith-dashboard.fullname" . }}
+  name: {{ include "runesmith-dashboard.name" . }}
 spec:
   type: {{ .Values.service.type }}
   selector:

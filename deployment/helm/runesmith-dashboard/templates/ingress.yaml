@@ -21,7 +21,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "runesmith-dashboard.fullname" $ }}
+                name: {{ include "runesmith-dashboard.name" $ }}
                 port:
                   number: {{ $.Values.service.port }}
         {{- end }}

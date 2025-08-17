@@ -35,7 +35,7 @@ spec:
             {{- end }}
             backend:
               service:
-                name: {{ include "runesmith-backend.fullname" $ }}
+                name: {{ include "runesmith-backend.name" $ }}
                 port:
                   number: {{ $.Values.server.port }}
           {{- end }}
