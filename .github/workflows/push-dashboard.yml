@@ -1,0 +1,75 @@
+name: push-dashboard.yml
+run-name: Pushing dashboard by @${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'components/runesmith-dashboard/**'
+      - 'deployment/helm/runesmith-dashboard/**'
+      - '.github/workflows/push-dashboard.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'components/runesmith-dashboard/**'
+      - 'deployment/helm/runesmith-dashboard/**'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Compute Base Version & Build Number
+        id: compute-version
+        run: |
+          BASE_VERSION="$(cat ./components/runesmith-dashboard/.Version | tr -d '[:space:]')"
+          BUILD_NUMBER="${{ github.run_number }}"
+          FULL_VERSION="${BASE_VERSION}.${BUILD_NUMBER}"
+
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "full_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PAT2GHCR }}
+
+      - name: Build and push Docker image for Runesmith Dashboard
+        uses: docker/build-push-action@v3
+        with:
+          platforms: linux/amd64
+          context: .
+          file: ./components/runesmith-dashboard/Dockerfile
+          build-args: |
+            FULL_VERSION=${{ steps.compute-version.outputs.full_version }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/runesmith-dashboard:${{ steps.compute-version.outputs.full_version }}
+            ghcr.io/${{ github.repository_owner }}/runesmith-dashboard:latest
+
+      - name: Package chart
+        env:
+          CHART_VERSION: ${{ steps.compute-version.outputs.full_version }}
+        run: |
+          helm package ./deployment/helm/runesmith-dashboard \
+            --version "$CHART_VERSION" \
+            --app-version "$CHART_VERSION" \
+            --destination ./chart-dist
+
+      - name: Push chart to GHCR
+        env:
+          CHART_VERSION: ${{ steps.compute-version.outputs.full_version }}
+          GHCR_REPO: ghcr.io/${{ github.repository_owner }}/helm
+        run: |
+          helm registry login ghcr.io \
+            --username '${{ github.actor }}' \
+            --password '${{ secrets.PAT2GHCR }}'
+          helm push ./chart-dist/runesmith-dashboard-"$CHART_VERSION".tgz \
+            oci://$GHCR_REPO
