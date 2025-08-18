@@ -1,7 +1,7 @@
 # Runesmith
 Ancient dark magic meets modern orchestration
 <p align="center">
-  <img src="motivation.jpg" alt="Motivational Image" style="max-width:50%; height:auto;" />
+  <img src="motivation.jpg" alt="Motivational Image" style="max-width:30%; height:auto;" />
 </p>
 A small Kubernetes-native demo that forges magical items using Mana.
 It does not solve a real problem. It exists as showcase for Kubernetes operators/controllers, a custom Device Plugin, Kueue-style HPC workload scheduling, and some microservice basics end-to-end.
