@@ -1,6 +1,8 @@
 package service
 
 import (
+	"math/rand"
+
 	"github.com/fukaraca/runesmith/shared"
 )
 
@@ -9,6 +11,5 @@ func (s *Service) AllItems() []shared.MagicalItem {
 }
 
 func (s *Service) randomItem() shared.MagicalItem {
-	return s.Items[0]
-	// return s.Items[rand.Intn(len(s.Items))]
+	return s.Items[rand.Intn(len(s.Items))]
 }

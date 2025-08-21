@@ -4,5 +4,6 @@ use (
 	./components/manawell-device-plugin
 	./components/runesmith-backend
 	./components/runesmith-enchanter
+	./components/runesmith-operator
 	./shared
 )

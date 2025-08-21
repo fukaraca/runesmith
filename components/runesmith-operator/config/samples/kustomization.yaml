@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- enchantment_v1_enchantment.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

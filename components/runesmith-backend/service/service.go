@@ -17,7 +17,7 @@ type Service struct {
 	kubeApi   *kubeapi.Client
 	plugin    config.Plugin
 	enchanter config.Enchanter
-	Tracker   *kubeapi.JobTracker
+	Tracker   *kubeapi.EnchantmentTracker
 }
 
 func (s *Service) nextID() int {
@@ -26,7 +26,7 @@ func (s *Service) nextID() int {
 
 func New(api *kubeapi.Client, items []shared.MagicalItem, plugin config.Plugin, enchanter config.Enchanter, meta *config.Meta, logger *slog.Logger) (*Service, error) {
 	art := artifactory.NewArtifactory()
-	tracker, err := kubeapi.NewJobTracker(api, meta, logger, art)
+	tracker, err := kubeapi.NewEnchantmentTracker(api, meta, logger, art)
 	if err != nil {
 		return nil, err
 	}

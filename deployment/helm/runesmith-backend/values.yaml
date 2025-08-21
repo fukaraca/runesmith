@@ -119,10 +119,10 @@ volumeMounts:
 
 nodeSelector: {}
 
-tolerations:
-  - key: "energy"
-    operator: "Exists"
-    effect: "NoSchedule"
+tolerations: [] # no need to use a dedicated worker node, lets force to control plane for npow
+#  - key: "energy"
+#    operator: "Exists"
+#    effect: "NoSchedule"
 
 affinity: {}
 

@@ -16,25 +16,26 @@ func (s *Service) Forge(ctx context.Context) (string, error) {
 	art := &artifactory.Artifact{
 		ID:        id,
 		ItemID:    item.ID,
+		ItemName:  item.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Status:    shared.ScheduledAS,
 	}
 
-	job, err := s.kubeApi.CreateFireEnchantmentJob(ctx, art.ID, s.enchanter)
+	enchantment, err := s.kubeApi.CreateEnchantment(ctx, art, s.enchanter, item)
 	if err != nil {
 		return "", err
 	}
 
-	art.TaskID = string(job.UID)
+	art.TaskID = string(enchantment.GetUID())
 	art.UpdatedAt = time.Now()
 	s.depot.ScheduleNewArtifact(art)
 
 	logger.Info("forge scheduled",
 		"artifact_id", art.ID,
 		"item_id", art.ItemID,
-		"job_name", job.Name,
-		"job_uid", string(job.UID),
+		"enchantment_name", enchantment.GetName(),
+		"enchantment_uid", string(enchantment.GetUID()),
 	)
-	return job.Name, nil
+	return enchantment.GetName(), nil
 }

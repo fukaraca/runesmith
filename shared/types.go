@@ -1,15 +1,39 @@
 package shared
 
 const (
-	FireEnergy      Elemental = "fire"
-	FrostEnergy     Elemental = "frost"
-	ArcaneElemental Elemental = "arcane"
+	FireEnergy   Elemental = "fire"
+	FrostEnergy  Elemental = "frost"
+	ArcaneEnergy Elemental = "arcane"
 )
 
 type Elemental string
 
 func (e Elemental) String() string {
 	return string(e)
+}
+
+func (e Elemental) Resource() Resource {
+	switch e {
+	case FireEnergy:
+		return FireResource
+	case FrostEnergy:
+		return FrostResource
+	case ArcaneEnergy:
+		return ArcaneResource
+	}
+	return ""
+}
+
+const (
+	FireResource   Resource = "manawell.io/fire"
+	FrostResource  Resource = "manawell.io/frost"
+	ArcaneResource Resource = "manawell.io/arcane"
+)
+
+type Resource string
+
+func (r Resource) String() string {
+	return string(r)
 }
 
 type AllocationInfo struct {
@@ -43,18 +67,36 @@ type MagicalItem struct {
 	Priority     int          `json:"priority"`
 }
 
-type ArtifactStatus string
+func (i MagicalItem) RequiredList() map[Elemental]int {
+	m := make(map[Elemental]int)
+	if i.Requirements.Fire > 0 {
+		m[FireEnergy] = i.Requirements.Fire
+	}
+	if i.Requirements.Frost > 0 {
+		m[FrostEnergy] = i.Requirements.Frost
+	}
+	if i.Requirements.Arcane > 0 {
+		m[ArcaneEnergy] = i.Requirements.Arcane
+	}
+	return m
+}
+
+type EnchantmentPhase string
 
 const (
-	ScheduledAS   ArtifactStatus = "Scheduled"
-	QueuedAS      ArtifactStatus = "Queued"
-	PreemptedAS   ArtifactStatus = "Preempted"
-	PrioritizedAS ArtifactStatus = "Prioritized"
-	EnchantingAS  ArtifactStatus = "Enchanting"
-	CompletedAS   ArtifactStatus = "Completed"
-	FailedAS      ArtifactStatus = "Failed"
-	DeletedAS     ArtifactStatus = "Deleted"
+	ScheduledAS   EnchantmentPhase = "Scheduled"
+	RequeuedAS    EnchantmentPhase = "Requeued"
+	PreemptedAS   EnchantmentPhase = "Preempted"
+	PrioritizedAS EnchantmentPhase = "Prioritized"
+	EnchantingAS  EnchantmentPhase = "Enchanting"
+	CompletedAS   EnchantmentPhase = "Completed"
+	FailedAS      EnchantmentPhase = "Failed"
+	DeletedAS     EnchantmentPhase = "Deleted"
 )
+
+func (p EnchantmentPhase) String() string {
+	return string(p)
+}
 
 type NodeStatus struct {
 	Name        string

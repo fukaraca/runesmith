@@ -1,0 +1,28 @@
+apiVersion: enchantment.runesmith.io/v1
+kind: Enchantment
+metadata:
+  name: enchantment-10042-god-slayer2
+  labels:
+    app.kubernetes.io/name: runesmith-operator
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  retention:
+    ttlSecondsAfterFinished: 5
+  orderId: 10042
+  artifact:
+    id: 38
+    name: "God-slayer Elemental Blade"
+    tier: Legendary
+    priority: 2
+    requirements:
+      - energyType: fire
+        resourceName: manawell.io/fire
+        limit: 16
+      - energyType: frost
+        resourceName: manawell.io/frost
+        limit: 5
+      - energyType: arcane
+        resourceName: manawell.io/arcane
+        limit: 4
+  cost: 5
+  selfReport: true

@@ -12,10 +12,11 @@ import (
 type Artifact struct {
 	ID        int
 	ItemID    int
+	ItemName  string
 	TaskID    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Status    shared.ArtifactStatus
+	Status    shared.EnchantmentPhase
 }
 
 type Artifactory struct {
@@ -43,7 +44,21 @@ func (a *Artifactory) ScheduleNewArtifact(art *Artifact) {
 	a.pending.Store(next)
 }
 
-func (a *Artifactory) MarkArtifactCompleted(id string, status shared.ArtifactStatus) {
+func (a *Artifactory) UpdatePendingArtifact(id string, status shared.EnchantmentPhase) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	pending := a.pending.Load().([]Artifact)
+	for i := range pending {
+		if pending[i].TaskID == id {
+			pending[i].Status = status
+			pending[i].UpdatedAt = time.Now()
+		}
+	}
+	a.pending.Store(pending)
+}
+
+func (a *Artifactory) MarkArtifactCompleted(id string, status shared.EnchantmentPhase) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -62,6 +77,7 @@ func (a *Artifactory) MarkArtifactCompleted(id string, status shared.ArtifactSta
 
 	if moved != nil {
 		moved.Status = status
+		moved.UpdatedAt = time.Now()
 		curD := a.done.Load().([]Artifact)
 		newD := make([]Artifact, len(curD)+1)
 		copy(newD, curD)

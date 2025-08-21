@@ -21,7 +21,7 @@ type Server struct {
 
 func NewServer(cfg *config.Config, engine *gin.Engine, logger *slog.Logger) (*Server, error) {
 	v1 := engine.Group(V1)
-	apiClient, err := kubeapi.NewInCluster(cfg.Metadata.Namespace) // use dedicated config after CRD
+	apiClient, err := kubeapi.NewInCluster(cfg.Metadata.Namespace)
 	if err != nil {
 		return nil, err
 	}
