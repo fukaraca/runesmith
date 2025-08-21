@@ -142,6 +142,9 @@ rbac:
     - apiGroups: [""]
       resources: ["pods"]
       verbs: ["get","list","watch"]
+    - apiGroups: [ "enchantment.runesmith.io" ]
+      resources: [ "enchantments","enchantments/status" ]
+      verbs: [ "create","get","list","watch","update","patch" ]
 
 server:
   replicas: 1
