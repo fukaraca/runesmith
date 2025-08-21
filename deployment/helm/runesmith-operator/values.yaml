@@ -146,5 +146,11 @@ rbac:
     - apiGroups: [ "enchantment.runesmith.io" ]
       resources: [ "enchantments","enchantments/status" ]
       verbs: [ "create","get","list","watch","update","patch" ]
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["get", "list", "watch", "create", "update", "patch"]
+    - apiGroups: ["events.k8s.io"]
+      resources: ["events"]
+      verbs: ["get", "list", "watch", "create", "update", "patch"]
 
 enchanterImage: "ghcr.io/fukaraca/runesmith-enchanter:1.0.12"
