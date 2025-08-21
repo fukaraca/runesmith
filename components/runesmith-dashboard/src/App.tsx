@@ -216,7 +216,7 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }>= ({ tit
                 <tr>
                     <th className="px-2 py-1">ID</th>
                     <th className="px-2 py-1">ItemID</th>
-                    <th className="px-2 py-1">ItemName</th>
+                    <th className="px-2 py-1 w-[22rem] md:w-[30rem]">ItemName</th>
                     <th className="px-2 py-1">Status</th>
                     <th className="px-2 py-1">Created</th>
                 </tr>
@@ -226,7 +226,7 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }>= ({ tit
                     <tr key={a.ID} className="border-t border-slate-100 dark:border-slate-800">
                         <td className="px-2 py-1 font-mono">{a.ID}</td>
                         <td className="px-2 py-1">{a.ItemID}</td>
-                        <td className="px-2 py-1 font-mono">{a.ItemName?.slice(0, 16)}…</td>
+                        <td className="px-2 py-1 w-[22rem] md:w-[30rem]"><span className="block truncate" title={a.ItemName ?? ""}>{a.ItemName}</span></td>
                         <td className="px-2 py-1">{a.Status}</td>
                         <td className="px-2 py-1 text-slate-500 dark:text-slate-400">{new Date(a.CreatedAt).toLocaleString()}</td>
                     </tr>

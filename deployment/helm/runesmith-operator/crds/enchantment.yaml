@@ -1,0 +1,164 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: enchantments.enchantment.runesmith.io
+spec:
+  group: enchantment.runesmith.io
+  names:
+    kind: Enchantment
+    listKind: EnchantmentList
+    plural: enchantments
+    shortNames:
+      - ench
+    singular: enchantment
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .status.phase
+          name: Phase
+          type: string
+        - jsonPath: .status.progress
+          name: Jobs
+          type: string
+        - jsonPath: .status.succeededJobs
+          name: Success
+          priority: 1
+          type: integer
+        - jsonPath: .status.failedJobs
+          name: Fail
+          priority: 1
+          type: integer
+        - jsonPath: .status.activeJobs
+          name: Active
+          priority: 1
+          type: integer
+      name: v1
+      schema:
+        openAPIV3Schema:
+          description: Enchantment is the Schema for the enchantments API
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: spec defines the desired state of Enchantment
+              properties:
+                artifact:
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      minLength: 1
+                      type: string
+                    priority:
+                      type: integer
+                    requirements:
+                      items:
+                        properties:
+                          energyType:
+                            enum:
+                              - fire
+                              - frost
+                              - arcane
+                            type: string
+                          limit:
+                            minimum: 1
+                            type: integer
+                          resourceName:
+                            minLength: 1
+                            type: string
+                        required:
+                          - energyType
+                          - limit
+                          - resourceName
+                        type: object
+                      type: array
+                    tier:
+                      enum:
+                        - Common
+                        - Rare
+                        - Epic
+                        - Legendary
+                      type: string
+                  required:
+                    - id
+                    - name
+                    - priority
+                    - requirements
+                    - tier
+                  type: object
+                cost:
+                  minimum: 1
+                  type: integer
+                orderId:
+                  minimum: 1
+                  type: integer
+                retention:
+                  properties:
+                    ttlSecondsAfterFinished:
+                      minimum: 5
+                      type: integer
+                  type: object
+                selfReport:
+                  default: true
+                  type: boolean
+              required:
+                - artifact
+                - cost
+                - orderId
+              type: object
+            status:
+              description: status defines the observed state of Enchantment
+              properties:
+                activeJobs:
+                  type: integer
+                completionTime:
+                  format: date-time
+                  type: string
+                expiresAt:
+                  format: date-time
+                  type: string
+                failedJobs:
+                  type: integer
+                phase:
+                  enum:
+                    - Scheduled
+                    - Enchanting
+                    - Failed
+                    - Completed
+                    - Requeued
+                  type: string
+                progress:
+                  type: string
+                succeededJobs:
+                  type: integer
+              required:
+                - activeJobs
+                - failedJobs
+                - phase
+                - succeededJobs
+              type: object
+          required:
+            - spec
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

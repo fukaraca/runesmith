@@ -2,6 +2,7 @@ VERSION_PLUGIN := $(shell cat ./components/manawell-device-plugin/.Version)
 VERSION_ENCHANTER := $(shell cat ./components/runesmith-enchanter/.Version)
 VERSION_BACKEND := $(shell cat ./components/runesmith-backend/.Version)
 VERSION_DASHBOARD := $(shell cat ./components/runesmith-dashboard/.Version)
+VERSION_OPERATOR := $(shell cat ./components/runesmith-operator/.Version)
 
 
 # Plugin commands
@@ -36,3 +37,11 @@ dashboard-helm-template:
 	helm template deployment/helm/runesmith-dashboard
 dashboard-docker-build:
 	docker build --no-cache --debug -f components/runesmith-dashboard/Dockerfile --build-arg FULL_VERSION=$(VERSION_DASHBOARD).0 -t runesmith-dashboard:latest .
+
+#operator commands
+operator-run:
+	cd ./components/runesmith-dashboard && go run ./cmd/main.go
+operator-docker-build:
+	docker build --no-cache --debug -f components/runesmith-operator/Dockerfile --build-arg FULL_VERSION=$(VERSION_OPERATOR).0 -t runesmith-operator:latest .
+operator-helm-template:
+	helm template deployment/helm/runesmith-operator

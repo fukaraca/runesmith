@@ -114,8 +114,8 @@ func (t *EnchantmentTracker) onEnchantUpdate(oldObj, newObj any) {
 		t.depot.MarkArtifactCompleted(artifactKey(newE), shared.CompletedAS)
 	case shared.FailedAS:
 		t.depot.MarkArtifactCompleted(artifactKey(newE), shared.FailedAS)
-	case shared.RequeuedAS:
-		t.depot.UpdatePendingArtifact(artifactKey(newE), shared.RequeuedAS)
+	case shared.EnchantingAS, shared.RequeuedAS: // until figure out with requeue
+		t.depot.UpdatePendingArtifact(artifactKey(newE), shared.EnchantingAS)
 	case shared.ScheduledAS:
 	}
 
