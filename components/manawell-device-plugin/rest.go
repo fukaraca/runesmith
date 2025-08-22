@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -63,7 +62,7 @@ func (p *DevicePlugin) handleStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := shared.NodeStatus{
-		Name:        fmt.Sprintf("%s-(%s)", p.config.Node.Name, p.config.Mana.EnergyType),
+		Name:        p.config.Mana.ResourceName,
 		Available:   p.manager.GetAvailableMana(),
 		Allocated:   p.manager.GetAllocatedMana(),
 		RunningJobs: len(p.manager.allocations),

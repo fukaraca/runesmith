@@ -86,6 +86,14 @@ function normalizeItemsPayload(j: any): Item[] {
     });
 }
 
+const rarityClass = (id?: number) => {
+    if (!id) return "";
+    if (id >= 31) return "text-orange-600 dark:text-orange-600 font-medium"; // Legendary
+    if (id >= 21) return "text-blue-600 dark:text-blue-400 font-medium";     // Epic
+    if (id >= 11) return "text-green-600 dark:text-green-500 font-medium";    // Rare
+    return "";                                                                // Common
+};
+
 
 // ---------- Toasts ----------
 // Theme (dark mode) helper
@@ -120,11 +128,20 @@ const useToasts = () => {
 
 const ToastStack: React.FC<{ toasts: Toast[] }> = ({ toasts }) => (
     <div className="fixed right-3 top-3 z-50 flex flex-col gap-2">
-        {toasts.map(t => (
-            <div key={t.id} className="rounded-2xl bg-black/80 text-white shadow-lg px-4 py-2 text-sm backdrop-blur">
-                {t.msg}
-            </div>
-        ))}
+        {toasts.map((t) => {
+            const isError = /failed|error|rate\s*limited|http\s*(4\d{2}|5\d{2})/i.test(t.msg);
+            return (
+                <div
+                    key={t.id}
+                    className={cx(
+                        "rounded-2xl text-white shadow-lg px-4 py-2 text-sm backdrop-blur",
+                        isError ? "bg-red-600 dark:bg-red-500" : "bg-black/80"
+                    )}
+                >
+                    {t.msg}
+                </div>
+            );
+        })}
     </div>
 );
 
@@ -152,9 +169,22 @@ const Header: React.FC<{ onOpenAbout: () => void; onOpenItems: () => void; onTog
     <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-700">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
-                <a href="/"><img src="/runesmith.png" alt="Runesmith" className="h-8 w-8 rounded-xl border dark:border-slate-700 object-cover" /></a>
+                <a href="/" className="flex items-center gap-2">
+                    <img src="/runesmith.png" alt="Runesmith" className="h-8 w-8 rounded-xl border dark:border-slate-700 object-cover" />
+                    <span className="text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-200">Runesmith</span>
+                </a>
                 <nav className="hidden md:flex items-center gap-6 text-sm text-slate-700 dark:text-slate-300">
-                    <a className="hover:text-black dark:hover:text-white" href="https://chat.skypiea-ai.xyz" target="_blank" rel="noreferrer">Skypiea <ExternalLink className="inline -mt-1 ml-1" size={14} /></a>
+                    <a
+                        className="inline-flex items-center gap-1 rounded-full px-3 py-1.5
+                       bg-gradient-to-r from-rose-500 to-orange-500 text-white
+                       shadow-sm ring-1 ring-inset ring-white/10 transition
+                       hover:shadow-md focus-visible:outline-none
+                       focus-visible:ring-2 focus-visible:ring-rose-400/70"
+                        href="https://chat.skypiea-ai.xyz"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Visit Skypiea (opens in a new tab)">Skypiea <ExternalLink className="-mt-0.5" size={14} />
+                    </a>
                     <button className="hover:text-black dark:hover:text-white" onClick={onOpenAbout}>About</button>
                 </nav>
             </div>
@@ -162,7 +192,7 @@ const Header: React.FC<{ onOpenAbout: () => void; onOpenItems: () => void; onTog
                 <button onClick={onToggleTheme} className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10" aria-label="Toggle dark mode">
                     {dark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
-                <a className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10" href="https://github.com/fukaraca" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={18} /></a>
+                <a className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10" href="https://github.com/fukaraca/runesmith" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={18} /></a>
                 <a className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10" href="https://www.linkedin.com/in/fukaraca" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={18} /></a>
             </div>
         </div>
@@ -172,7 +202,7 @@ const Header: React.FC<{ onOpenAbout: () => void; onOpenItems: () => void; onTog
 const Footer: React.FC = () => (
     <footer className="mt-12 border-t border-slate-200 dark:border-slate-700">
         <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-slate-500 dark:text-slate-400">
-            Built for the Runesmith demo · Kubernetes, CRDs, Operators, Kueue and a dash of arcana.
+            Runesmith demo — Kubernetes CRDs & Operator, Kueue priority scheduling, custom Device Plugin with virtual resources(manawell.io/fire · manawell.io/frost · manawell.io/arcane), Go backend & React dashboard, microservices, deployed on AWS EC2 (kubeadm).
         </div>
     </footer>
 );
@@ -207,7 +237,7 @@ const NodeCard: React.FC<{ s: NodeStatus }>= ({ s }) => {
 };
 
 // ---------- Lists ----------
-const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }>= ({ title, artifacts }) => (
+const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }> = ({ title, artifacts }) => (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm bg-white dark:bg-slate-900">
         <div className="mb-3 text-sm font-semibold">{title}</div>
         <div className="overflow-x-auto">
@@ -222,17 +252,30 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }>= ({ tit
                 </tr>
                 </thead>
                 <tbody>
-                {artifacts.map(a => (
+                {artifacts.map((a) => (
                     <tr key={a.ID} className="border-t border-slate-100 dark:border-slate-800">
                         <td className="px-2 py-1 font-mono">{a.ID}</td>
                         <td className="px-2 py-1">{a.ItemID}</td>
-                        <td className="px-2 py-1 w-[22rem] md:w-[30rem]"><span className="block truncate" title={a.ItemName ?? ""}>{a.ItemName}</span></td>
+                        <td className="px-2 py-1 w-[22rem] md:w-[30rem]">
+                <span
+                    className={`block truncate ${rarityClass(a.ItemID ?? 0)}`}
+                    title={a.ItemName ?? ""}
+                >
+                  {a.ItemName}
+                </span>
+                        </td>
                         <td className="px-2 py-1">{a.Status}</td>
-                        <td className="px-2 py-1 text-slate-500 dark:text-slate-400">{new Date(a.CreatedAt).toLocaleString()}</td>
+                        <td className="px-2 py-1 text-slate-500 dark:text-slate-400">
+                            {new Date(a.CreatedAt).toLocaleString()}
+                        </td>
                     </tr>
                 ))}
                 {artifacts.length === 0 && (
-                    <tr><td colSpan={5} className="px-2 py-3 text-center text-slate-400 dark:text-slate-500">Nothing here yet.</td></tr>
+                    <tr>
+                        <td colSpan={5} className="px-2 py-3 text-center text-slate-400 dark:text-slate-500">
+                            Nothing here yet.
+                        </td>
+                    </tr>
                 )}
                 </tbody>
             </table>
@@ -290,11 +333,23 @@ const App: React.FC = () => {
     const forge = useCallback(async () => {
         try {
             const r = await fetch(`${API}/forge`, { method: "POST" });
+            if (r.status === 429) {
+                const ra = r.headers.get("Retry-After");
+                push(`Rate limited (HTTP 429).${ra ? ` Retry after: ${ra}.` : ""}`);
+                return;
+            }
+            if (!r.ok) {
+                push(`Forge failed (HTTP ${r.status}).`);
+                return;
+            }
+
             const j = await r.json();
             const name = j?.job_name || "unknown";
             push(`Job ${name} created`);
             await Promise.all([fetchArtifacts(), fetchStatus()]);
-        } catch { push("Forge request failed"); }
+        } catch {
+            push("Forge request failed");
+        }
     }, [fetchArtifacts, fetchStatus, push]);
 
     useEffect(() => { fetchStatus(); fetchArtifacts(); }, [fetchStatus, fetchArtifacts]);
@@ -308,10 +363,10 @@ const App: React.FC = () => {
     useEffect(() => { if (itemsOpen) fetchItems(); }, [itemsOpen, fetchItems]);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200">
+        <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 flex flex-col">
             <Header onOpenAbout={() => setAboutOpen(true)} onOpenItems={() => setItemsOpen(true)} onToggleTheme={toggle} dark={dark} />
 
-            <main className="mx-auto max-w-6xl px-4">
+            <main className="mx-auto max-w-6xl px-4 flex-1">
                 <div className="flex flex-wrap items-center gap-3 py-4">
                     <button onClick={forge} className="rounded-2xl px-4 py-2 text-sm font-semibold shadow-sm transition text-white bg-orange-900 hover:bg-orange-700">Forge</button>
                     <button onClick={() => setItemsOpen(true)} className="text-sm underline underline-offset-4">List Of Possible Artifacts</button>
@@ -340,20 +395,70 @@ const App: React.FC = () => {
             <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title="About Runesmith">
                 <div className="prose prose-slate dark:prose-invert max-w-none">
                     <p>
-                        This UI drives a Kubernetes-based demo platform that crafts magical artifacts using a
-                        virtual resource called <em>Mana</em>. Under the hood it showcases a custom Device Plugin
-                        exposing three resources (<strong>fire</strong>, <strong>frost</strong>, <strong>arcane</strong>),
-                        a CRD-managed job lifecycle via an Operator, and priority scheduling with Kueue.
+                        Runesmith is a Kubernetes-native demo that “forges” magical artifacts using a virtual resource
+                        called <em>Mana</em>. It’s built to showcase CRDs &amp; Operators, a custom Device Plugin,
+                        and priority scheduling with Kueue, no expensive real hardware required.
                     </p>
-                    <p>
-                        Use <strong>Forge</strong> to create an artifact. Jobs consume Mana on the relevant nodes,
-                        report progress here in real time, and release it on completion. Items shows the catalog
-                        of possible artifacts and their energy requirements.
+
+                    <h4>What’s under the hood</h4>
+                    <ul>
+                        <li>
+                            <strong>Custom Device Plugin</strong> exposes three resources:
+                            <code className="mx-1">manawell.io/fire</code>,
+                            <code className="mx-1">manawell.io/frost</code>,
+                            <code className="mx-1">manawell.io/arcane</code>.
+                            Each essence consumes 1 Mana on its matching node while running. Source of truth for resources.
+                        </li>
+                        <li>
+                            <strong>CRD + Operator</strong> (<code>Enchantment</code>) defines an artifact order and manages
+                            the lifecycle of the Jobs it requires.
+                        </li>
+                        <li>
+                            <strong>Kueue</strong> enforces priorities and can queue or preempt workloads when Mana is scarce.
+                        </li>
+                        <li>
+                            <strong>Backend &amp; UI</strong> (Go + React) submit orders, watch status, and visualize Mana and progress.
+                        </li>
+                    </ul>
+
+                    <h4>Example: end-to-end forging</h4>
+                    <pre className="whitespace-pre-wrap"><code>{`id: 38
+name: "God-slayer Elemental Blade"
+tier: "Legendary"
+requirements:
+  fire: 6
+  frost: 5
+  arcane: 4
+priority: 2`}</code></pre>
+
+                    <ol className="list-decimal pl-5">
+                        <li>The UI requests a random item from the catalog.</li>
+                        <li>The backend creates an <code>Enchantment</code> (CRD) representing that order.</li>
+                        <li>The Operator notices the new Enchantment and spawns the required Jobs:
+                            <b> 6x</b> represented as time consuming job on <code className="mx-1">Fire</code> tainted node.</li>
+                        <li>Kueue schedules(not implemented yet though, for now no preemption/prioritization) those Jobs based on available Mana; higher tiers (Legendary) carry higher priority and can preempt queued lower-tier work.</li>
+                        <li>Each node’s Device Plugin advertises its Mana inventory to kubelet(eg Nvidia GPU nodes vs AMD GPU nodes); Jobs consume the matching resource while running.</li>
+                        <li>As Jobs finish, Mana is released; Enchantment(CR) status updated; the backend tracks completion and the UI updates live.</li>
+                        <li>When all required essences are done, the Enchantment is marked <code>Completed</code>.</li>
+                    </ol>
+
+                    <h4>How to read the UI</h4>
+                    <ul>
+                        <li><strong>Forge</strong>: submit a new Enchantment (random item).</li>
+                        <li><strong>Items</strong>: view the catalog (requirements per energy).</li>
+                        <li><strong>Artifacts</strong>: see live orders and statuses
+                            (<code>Scheduled</code>, <code>Queued</code>, <code>Preempted</code>, <code>Prioritized</code>, <code>Completed</code>).</li>
+                        <li><strong>Mana</strong>: real-time availability and allocation per node and energy type.</li>
+                    </ul>
+
+                    <p className="text-xs">
+                        Purposefully a demo: it doesn’t solve a business problem; it shows how to build Kubernetes-native systems with
+                        CRDs/Operators, a Device Plugin, and Kueue while keeping everything observable and reproducible.
                     </p>
                 </div>
             </Modal>
 
-            <Modal open={itemsOpen} onClose={() => setItemsOpen(false)} title="Items">
+            <Modal open={itemsOpen} onClose={() => setItemsOpen(false)} title="List of Possible Items">
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                         <thead className="text-left text-slate-500 dark:text-slate-400">
@@ -365,10 +470,14 @@ const App: React.FC = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {items.map(it => (
+                        {items.map((it) => (
                             <tr key={it.ID} className="border-t border-slate-100 dark:border-slate-800">
                                 <td className="px-2 py-1">{it.ID}</td>
-                                <td className="px-2 py-1">{it.Name}</td>
+                                <td className={`px-2 py-1`}>
+                                    <span className={`block truncate ${rarityClass(it.ID)}`} title={it.Name ?? ""}>
+                                        {it.Name}
+                                    </span>
+                                </td>
                                 <td className="px-2 py-1">{it.Tier || "-"}</td>
                                 <td className="px-2 py-1">
                                     <span style={{ color: ENERGY_HEX.fire }} className="font-semibold">{it.Requirements?.Fire ?? 0}</span>

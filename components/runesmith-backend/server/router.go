@@ -23,9 +23,9 @@ func (s *Server) bindRoutes() {
 	s.engine.GET("/healthz", r.Healthz)
 	s.engine.GET("/readyz", r.Readyz)
 
-	s.router.GET("/items", middlewares.RateLimiterMw(), r.GetItemsList)
+	s.router.GET("/items", r.GetItemsList)
 	s.router.POST("/forge", middlewares.RateLimiterMw(), r.Forge)
 	s.router.GET("/artifacts", r.Artifacts)
 
-	s.router.GET("/status", middlewares.RateLimiterMw(), r.Status)
+	s.router.GET("/status", r.Status)
 }

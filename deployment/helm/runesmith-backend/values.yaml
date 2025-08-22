@@ -70,7 +70,8 @@ ingress:
         - path: /api
           pathType: Prefix
   tls:
-  - hosts: [runesmith.skypiea-ai.xyz]
+    enabled: false
+    host: "runesmith.skypiea-ai.xyz" #just use one , no adventure
     secretName: runesmith-tls
 
 resources: {}
