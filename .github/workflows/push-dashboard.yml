@@ -113,5 +113,4 @@ jobs:
         run: |
           helm upgrade --install --debug --wait --atomic --timeout 5m runesmith-dashboard \
             oci://ghcr.io/${{ github.repository_owner }}/helm/runesmith-dashboard \
-            --set imagePullSecrets[0].name=ghcr-login-secret \
-            --set-string ingress.hosts[0].host='${{ vars.EC2_DNS }}'
+            --set imagePullSecrets[0].name=ghcr-login-secret
