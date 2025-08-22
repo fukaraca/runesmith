@@ -316,8 +316,9 @@ const App: React.FC = () => {
             ]);
             const norm = (x: any): Artifact[] => (Array.isArray(x) ? x : x.artifacts) || [];
             const sortByCreated = (arr: Artifact[]) => [...arr].sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
+            const sortByUpdated = (arr: Artifact[]) => [...arr].sort((a, b) => new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime());
             setPending(sortByCreated(norm(p)));
-            setCompleted(sortByCreated(norm(c)));
+            setCompleted(sortByUpdated(norm(c)));
         } catch { push("Failed to fetch artifacts"); }
     }, [push]);
 
