@@ -48,6 +48,9 @@ spec:
               containerPort: {{ .Values.ports.metrics }}
             - name: health
               containerPort: {{ .Values.ports.health }}
+          env:
+            - name: ENCHANTER_IMAGE
+              value: "{{ .Values.enchanterImage}}"
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

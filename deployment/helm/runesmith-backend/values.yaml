@@ -61,17 +61,17 @@ ingress:
   enabled: true
   className: "nginx"
   annotations: {}
+    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: localhost
+    - host: runesmith.skypiea-ai.xyz
       paths:
         - path: /api
           pathType: Prefix
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  tls:
+  - hosts: [runesmith.skypiea-ai.xyz]
+    secretName: runesmith-tls
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -119,10 +119,10 @@ volumeMounts:
 
 nodeSelector: {}
 
-tolerations: [] # no need to use a dedicated worker node, lets force to control plane for npow
-#  - key: "energy"
-#    operator: "Exists"
-#    effect: "NoSchedule"
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
 
 affinity: {}
 

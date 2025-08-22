@@ -120,7 +120,10 @@ volumeMounts: []
 
 nodeSelector: {}
 
-tolerations: []
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
 
 affinity: {}
 
@@ -145,7 +148,7 @@ rbac:
       verbs: ["get","list","watch"]
     - apiGroups: [ "enchantment.runesmith.io" ]
       resources: [ "enchantments","enchantments/status" ]
-      verbs: [ "create","get","list","watch","update","patch" ]
+      verbs: [ "create","get","list","watch","update","patch", "delete" ]
     - apiGroups: [""]
       resources: ["events"]
       verbs: ["get", "list", "watch", "create", "update", "patch"]
@@ -153,4 +156,4 @@ rbac:
       resources: ["events"]
       verbs: ["get", "list", "watch", "create", "update", "patch"]
 
-enchanterImage: "ghcr.io/fukaraca/runesmith-enchanter:1.0.12"
+enchanterImage: "ghcr.io/fukaraca/runesmith-enchanter:latest"
