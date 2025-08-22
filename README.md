@@ -8,6 +8,8 @@ It does not solve a real problem. It exists as showcase for Kubernetes operators
 
 If you came here looking for business value, sorry. If you want a compact, working example of k8s-native patterns, this is it.
 
+Note: Scheduling with kueue not glued yet
+
 ---
 ## Story in short
 * Generate a random magical item by utilizing Kubernetes functionalities 
@@ -16,8 +18,8 @@ If you came here looking for business value, sorry. If you want a compact, worki
 * An **Enchantment** CRD is the order form: “make this item with these essence amounts.” 
 * The **Operator** watches Enchantments and orchestrates actual jobs. 
 * **Kueue** keeps the line fair: scarce mana, priorities, preemption. 
-* The **Device Plugin** lives on each anvil, giving it an identity and describing what kind of jobs it can take. 
-* A tiny **backend** and **UI** sit on top so you can click a button and watch the system breathe.
+* The **Device Plugin** lives on each anvil, giving it an identity and describing what kind of jobs it can take. Source of truth for resources. 
+* A **backend** and **UI** sit on top so you can click a button and watch the system channel.
 
 ---
 ## Components
@@ -33,7 +35,7 @@ If you came here looking for business value, sorry. If you want a compact, worki
 * **CRD kind**: `Enchantment` (the desired item and its essence needs).
 * **Anvils (nodes)**: specialized workers; each one is aligned to Fire/Frost/Arcane.
 * **Mana**: resource of the anvil. 5 Frost essence created by 5 Mana by frost node.
-* **Statuses**: `Queued → Scheduled → Running → (Preempted?) → Completed`.
+* **Statuses**: `Scheduled → Enchanting → Requeued → (Preempted?) → Completed`.
 
 ---
 
@@ -58,5 +60,5 @@ From the tiny catalog:
 4. Operator watches the orders and spawns Jobs (6x Fire, 5x Frost, 4x Arcane)
 5. Kueue places the jobs accordingly, prioritize or preempts by its rules
 6. Device plugin advertises its **resource type**(_manawell.io/fire_) and mana inventory to the kubelet.
-7. Completion detected by backend and status shown in the UI
+7. Completion of CR(enchantment) detected by backend and status shown in the UI
 

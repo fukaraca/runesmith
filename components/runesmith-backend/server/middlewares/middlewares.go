@@ -75,7 +75,7 @@ func realIP(r *http.Request) string {
 }
 
 func RateLimiterMw() gin.HandlerFunc {
-	limiter := rate.NewLimiter(1, 10)
+	limiter := rate.NewLimiter(1, 20)
 	return func(c *gin.Context) {
 
 		if limiter.Allow() {
