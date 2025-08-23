@@ -354,6 +354,7 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 
 	progress := fmt.Sprintf("%d/%d", 0, len(enchantment.Spec.Artifact.Requirements))
 	ptr.progress = &progress
+	ptr.phase = shared.ScheduledAS.Ptr()
 	if err := r.reconcileStatus(ctx, ptr); err != nil {
 		logger.Error(err, "Failed to update Enchantment status")
 		return ctrl.Result{}, err
