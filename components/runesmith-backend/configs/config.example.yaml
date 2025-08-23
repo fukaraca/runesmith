@@ -103,7 +103,7 @@ magicalItems:
     requirements:
       fire: 3
       arcane: 3
-    priority: 1
+    priority: 2
 
   - id: 12
     name: "Blizzard Staff"
@@ -111,7 +111,7 @@ magicalItems:
     requirements:
       frost: 3
       arcane: 3
-    priority: 1
+    priority: 2
 
   - id: 13
     name: "Pure Arcane Tome"
@@ -119,7 +119,7 @@ magicalItems:
     requirements:
       fire: 3
       frost: 3
-    priority: 1
+    priority: 2
 
   - id: 14
     name: "Molten Ice Shield"
@@ -128,7 +128,7 @@ magicalItems:
       fire: 2
       frost: 2
       arcane: 2
-    priority: 1
+    priority: 2
 
   - id: 15
     name: "Glacial Fire Hammer"
@@ -137,7 +137,7 @@ magicalItems:
       fire: 3
       frost: 2
       arcane: 1
-    priority: 1
+    priority: 2
 
   - id: 16
     name: "Arcane Frost Bow"
@@ -146,7 +146,7 @@ magicalItems:
       fire: 1
       frost: 3
       arcane: 2
-    priority: 1
+    priority: 2
 
   - id: 17
     name: "Tri-Element Gauntlets"
@@ -155,7 +155,7 @@ magicalItems:
       fire: 2
       frost: 2
       arcane: 3
-    priority: 1
+    priority: 2
 
   - id: 18
     name: "Volcanic Ice Armor"
@@ -164,7 +164,7 @@ magicalItems:
       fire: 3
       frost: 3
       arcane: 1
-    priority: 1
+    priority: 2
 
   - id: 19
     name: "Mystic Flame Cape"
@@ -173,7 +173,7 @@ magicalItems:
       fire: 2
       frost: 1
       arcane: 3
-    priority: 1
+    priority: 2
 
   - id: 20
     name: "Frozen Arcane Crown"
@@ -182,7 +182,7 @@ magicalItems:
       fire: 1
       frost: 2
       arcane: 3
-    priority: 1
+    priority: 2
 
   - id: 21
     name: "Dragon Fire Claymore"
@@ -190,7 +190,7 @@ magicalItems:
     requirements:
       fire: 4
       arcane: 4
-    priority: 1
+    priority: 3
 
   - id: 22
     name: "Eternal Frost Spear"
@@ -198,7 +198,7 @@ magicalItems:
     requirements:
       frost: 4
       arcane: 4
-    priority: 1
+    priority: 3
 
   - id: 23
     name: "Void Arcane Scepter"
@@ -206,7 +206,7 @@ magicalItems:
     requirements:
       fire: 4
       frost: 4
-    priority: 1
+    priority: 3
 
   - id: 24
     name: "Equilibrium Battle Axe"
@@ -215,7 +215,7 @@ magicalItems:
       fire: 3
       frost: 3
       arcane: 2
-    priority: 1
+    priority: 3
 
   - id: 25
     name: "Phoenix Ice Wings"
@@ -224,7 +224,7 @@ magicalItems:
       fire: 4
       frost: 2
       arcane: 2
-    priority: 1
+    priority: 3
 
   - id: 26
     name: "Glacial Mystic Robes"
@@ -233,7 +233,7 @@ magicalItems:
       fire: 2
       frost: 4
       arcane: 2
-    priority: 1
+    priority: 3
 
   - id: 27
     name: "Tri-Force Legendary Blade"
@@ -242,7 +242,7 @@ magicalItems:
       fire: 3
       frost: 3
       arcane: 3
-    priority: 1
+    priority: 3
 
   - id: 28
     name: "Magma Frost Boots"
@@ -251,7 +251,7 @@ magicalItems:
       fire: 4
       frost: 3
       arcane: 1
-    priority: 1
+    priority: 3
 
   - id: 29
     name: "Arcane Storm Helmet"
@@ -260,7 +260,7 @@ magicalItems:
       fire: 1
       frost: 3
       arcane: 4
-    priority: 1
+    priority: 3
 
   - id: 30
     name: "Elemental Master Ring"
@@ -269,7 +269,7 @@ magicalItems:
       fire: 4
       frost: 4
       arcane: 4
-    priority: 1
+    priority: 3
 
   - id: 31
     name: "Apocalypse Flame Sword"
@@ -278,7 +278,7 @@ magicalItems:
       fire: 6
       frost: 3
       arcane: 6
-    priority: 2
+    priority: 4
 
   - id: 32
     name: "Absolute Zero Staff"
@@ -287,7 +287,7 @@ magicalItems:
       fire: 3
       frost: 6
       arcane: 6
-    priority: 2
+    priority: 4
 
   - id: 33
     name: "Reality Arcane Grimoire"
@@ -296,7 +296,7 @@ magicalItems:
       fire: 6
       frost: 6
       arcane: 3
-    priority: 2
+    priority: 4
 
   - id: 34
     name: "Genesis Trinity Armor"
@@ -305,7 +305,7 @@ magicalItems:
       fire: 5
       frost: 5
       arcane: 5
-    priority: 2
+    priority: 4
 
   - id: 35
     name: "World-breaker Chaos Hammer"
@@ -314,7 +314,7 @@ magicalItems:
       fire: 6
       frost: 4
       arcane: 5
-    priority: 2
+    priority: 4
 
   - id: 36
     name: "Eternal Winter Bow"
@@ -323,7 +323,7 @@ magicalItems:
       fire: 4
       frost: 6
       arcane: 5
-    priority: 2
+    priority: 4
 
   - id: 37
     name: "Omni-mage Supreme Crown"
@@ -332,7 +332,7 @@ magicalItems:
       fire: 5
       frost: 4
       arcane: 6
-    priority: 2
+    priority: 4
 
   - id: 38
     name: "God-slayer Elemental Blade"
@@ -341,7 +341,7 @@ magicalItems:
       fire: 6
       frost: 6
       arcane: 6
-    priority: 2
+    priority: 4
 
   - id: 39
     name: "Cosmic Fire Shield"
@@ -350,7 +350,7 @@ magicalItems:
       fire: 6
       frost: 2
       arcane: 6
-    priority: 1
+    priority: 2
 
   - id: 40
     name: "Universe Frost Gauntlets"
@@ -359,4 +359,4 @@ magicalItems:
       fire: 3
       frost: 6
       arcane: 6
-    priority: 2
+    priority: 4

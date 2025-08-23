@@ -43,6 +43,7 @@ const (
 	lblKeyEnergy   = "energy"
 	lblKeyWorkload = "workload-type"
 	jobOwnerIndex  = "enchantmentIndex"
+	localKueue     = "runesmith-queue"
 )
 
 // EnchantmentReconciler reconciles a Enchantment object
@@ -99,6 +100,9 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return ctrl.Result{}, err
 		}
 		if len(jobs.Items) > 0 {
+			if !r.isJobEnchanting(&jobs) {
+				return ctrl.Result{}, nil
+			}
 			ench.Status.Phase = shared.EnchantingAS
 			if err = r.Status().Update(ctx, ench); err != nil {
 				logger.Error(err, "failed to update Enchantment status", "from", shared.ScheduledAS, "to", shared.EnchantingAS)
@@ -145,8 +149,7 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				continue
 			}
 
-			if job.Status.Active > 0 && (job.Status.Ready != nil && *job.Status.Ready == 0) &&
-				job.GetCreationTimestamp().Time.Before(time.Now().Add(-20*time.Second)) && job.Status.Succeeded == 0 { //TODO find a better way
+			if job.Spec.Suspend != nil && *job.Spec.Suspend {
 				r.Recorder.Eventf(ench, corev1.EventTypeNormal, "JobSuspended", "Job %s suspended", job.Name)
 				suspendedCount++
 				continue
@@ -221,6 +224,15 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
+func (r *EnchantmentReconciler) isJobEnchanting(jobs *batchv1.JobList) bool {
+	for i := range jobs.Items {
+		if jobs.Items[i].Spec.Suspend != nil && *jobs.Items[i].Spec.Suspend {
+			return false
+		}
+	}
+	return true
+}
+
 func (r *EnchantmentReconciler) markCompletion(enchantment *enchv1.Enchantment) {
 	if enchantment.Status.CompletionTime != nil {
 		return
@@ -242,7 +254,7 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 		jobNameStub := r.generateJobName(enchantment, ess.EnergyType)
 		nodeSelector := r.determineNodeSelector(&ess) // redundant
 		tolerations := r.determineTolerations(&ess)
-		suspend := false // TODO kueue expects on suspend
+		suspend := true // TODO kueue expects on suspend
 		backOff := int32(0)
 
 		job := &batchv1.Job{
@@ -253,9 +265,9 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 					lblKeyEnergy:                           ess.EnergyType.String(),
 					lblKeyWorkload:                         "enchantment",
 					"artifact-order-id":                    strconv.Itoa(enchantment.Spec.OrderID),
-					"kueue.x-k8s.io/queue-name":            "some-queue",
-					"kueue.x-k8s.io/priority-class":        string(enchantment.Spec.Artifact.Tier),
-					"kueue.x-k8s.io/max-exec-time-seconds": "300",
+					"kueue.x-k8s.io/queue-name":            localKueue,
+					"kueue.x-k8s.io/priority-class":        enchantment.Spec.Artifact.Tier.Lower(),
+					"kueue.x-k8s.io/max-exec-time-seconds": "360",
 				},
 			},
 			Spec: batchv1.JobSpec{
@@ -317,7 +329,7 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 											Port: intstr.FromInt32(8080),
 										},
 									},
-									InitialDelaySeconds: 5,
+									InitialDelaySeconds: 2,
 									PeriodSeconds:       2,
 								},
 								ReadinessProbe: &corev1.Probe{
@@ -327,7 +339,7 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 											Port: intstr.FromInt32(8080),
 										},
 									},
-									InitialDelaySeconds: 5, // TODO Parameterize
+									InitialDelaySeconds: 2, // TODO Parameterize
 									PeriodSeconds:       1,
 								},
 							},
@@ -355,11 +367,9 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 		}
 		r.Recorder.Eventf(enchantment, corev1.EventTypeNormal, "JobsCreated", "created %d jobs", len(enchantment.Spec.Artifact.Requirements))
 		logger.Info("Successfully created Job", "job", job.Name)
-
 	}
 
 	enchantment.Status.Progress = fmt.Sprintf("%d/%d", 0, len(enchantment.Spec.Artifact.Requirements))
-	enchantment.Status.Phase = shared.EnchantingAS
 	if err := r.Status().Update(ctx, enchantment); err != nil {
 		logger.Error(err, "Failed to update Enchantment status")
 		return ctrl.Result{}, err

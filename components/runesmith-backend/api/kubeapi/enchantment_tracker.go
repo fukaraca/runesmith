@@ -114,8 +114,10 @@ func (t *EnchantmentTracker) onEnchantUpdate(oldObj, newObj any) {
 		t.depot.MarkArtifactCompleted(artifactKey(newE), shared.CompletedAS)
 	case shared.FailedAS:
 		t.depot.MarkArtifactCompleted(artifactKey(newE), shared.FailedAS)
-	case shared.EnchantingAS, shared.RequeuedAS: // until figure out with requeue
+	case shared.EnchantingAS:
 		t.depot.UpdatePendingArtifact(artifactKey(newE), shared.EnchantingAS)
+	case shared.RequeuedAS:
+		t.depot.UpdatePendingArtifact(artifactKey(newE), shared.RequeuedAS)
 	case shared.ScheduledAS:
 	}
 
@@ -125,7 +127,6 @@ func (t *EnchantmentTracker) onEnchantUpdate(oldObj, newObj any) {
 func (t *EnchantmentTracker) onEnchantDelete(obj any) {
 	ench, ok := obj.(*enchantv1.Enchantment)
 	if !ok {
-		// DeletedFinalStateUnknown handling if you like:
 		if tomb, ok := obj.(cache2.DeletedFinalStateUnknown); ok {
 			if cast, ok2 := tomb.Obj.(*enchantv1.Enchantment); ok2 {
 				ench = cast

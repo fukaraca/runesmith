@@ -45,7 +45,7 @@ func NewInCluster(namespace string) (*Client, error) {
 	return &Client{set: cs, Namespace: namespace, cont: cont, restConfig: cfg, scheme: sch}, nil
 }
 
-func (c *Client) CreateEnchantment( // temporary method for now until CRD implemented
+func (c *Client) CreateEnchantment(
 	ctx context.Context,
 	artifact *artifactory.Artifact,
 	enchConfig config.Enchanter,

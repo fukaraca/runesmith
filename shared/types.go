@@ -1,5 +1,7 @@
 package shared
 
+import "strings"
+
 const (
 	FireEnergy   Elemental = "fire"
 	FrostEnergy  Elemental = "frost"
@@ -52,6 +54,10 @@ const (
 	Epic      Tier = "Epic"
 	Legendary Tier = "Legendary"
 )
+
+func (t Tier) Lower() string {
+	return strings.ToLower(string(t))
+}
 
 type Requirements struct {
 	Fire   int `json:"fire"`

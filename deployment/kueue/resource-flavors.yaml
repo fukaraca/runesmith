@@ -1,0 +1,38 @@
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: fire-flavor
+spec:
+  nodeLabels:
+    energy: fire
+  tolerations:
+    - key: "energy"
+      operator: "Equal"
+      value: "fire"
+      effect: "NoSchedule"
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: frost-flavor
+spec:
+  nodeLabels:
+    energy: frost
+  tolerations:
+    - key: "energy"
+      operator: "Equal"
+      value: "frost"
+      effect: "NoSchedule"
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: arcane-flavor
+spec:
+  nodeLabels:
+    energy: arcane
+  tolerations:
+    - key: "energy"
+      operator: "Equal"
+      value: "arcane"
+      effect: "NoSchedule"

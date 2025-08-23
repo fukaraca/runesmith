@@ -1,0 +1,32 @@
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: runesmith-cq # no need for distinct CQs since we use same rules for all resources
+spec:
+  namespaceSelector: {}
+  queueingStrategy: BestEffortFIFO
+  preemption:
+    withinClusterQueue: LowerPriority
+    reclaimWithinCohort: LowerPriority
+    borrowWithinCohort:
+      policy: LowerPriority
+      maxPriorityThreshold: 3
+  resourceGroups:
+    - coveredResources: ["manawell.io/fire"]
+      flavors:
+        - name: fire-flavor
+          resources:
+            - name: manawell.io/fire
+              nominalQuota: 100
+    - coveredResources: ["manawell.io/frost"]
+      flavors:
+        - name: frost-flavor
+          resources:
+            - name: manawell.io/frost
+              nominalQuota: 100
+    - coveredResources: ["manawell.io/arcane"]
+      flavors:
+        - name: arcane-flavor
+          resources:
+            - name: manawell.io/arcane
+              nominalQuota: 100
