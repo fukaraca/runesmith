@@ -172,15 +172,15 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			state = shared.FailedAS
 			logger.Info("enchantment failed", "name", ench.Name, "failed jobs", failedCount)
 			r.markCompletion(ench)
-		case suspendedCount > 0:
-			// any job suspended/requeued means enchantment is requeued
-			state = shared.RequeuedAS
-			logger.Info("enchantment requeued", "name", ench.Name)
 		case completedCount == len(jobs.Items):
 			// all jobs completed successfully
 			state = shared.CompletedAS
 			logger.Info("enchantment completed", "name", ench.Name)
 			r.markCompletion(ench)
+		case suspendedCount > 0:
+			// any job suspended/requeued means enchantment is requeued
+			state = shared.RequeuedAS
+			logger.Info("enchantment requeued", "name", ench.Name)
 		default:
 			if phase == shared.RequeuedAS {
 				r.Recorder.Eventf(ench, corev1.EventTypeNormal, "JobResumed", "A pendingJob resumed but we don't know which one")

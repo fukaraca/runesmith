@@ -8,8 +8,6 @@ It does not solve a real problem. It exists as showcase for Kubernetes operators
 
 If you came here looking for business value, sorry. If you want a compact, working example of k8s-native patterns, this is it.
 
-Note: Scheduling with kueue not glued yet
-
 ---
 ## Story in short
 * Generate a random magical item by utilizing Kubernetes functionalities 
@@ -26,7 +24,7 @@ Note: Scheduling with kueue not glued yet
 
 * **Enchantment (CRD)** — the desired state. “Please craft X, needs Y Mana.”
 * **Runesmith Operator** — the brain: watches Enchantments, spawns/updates jobs per energy type, writes status.
-* **Manawell Device Plugin** — runs on each anvil as daemon-set; manages Mana as resource(eg like GPU compute unit)
+* **Manawell Device Plugin** — runs on each anvil as daemon-set; manages Mana as resource( like GPU compute unit)
 * **Kueue** — the queue/scheduler layer that respects priority (Legendary > others) and available capacity.
 * **Backend (Go)** — REST API to create,watch Enchantments over k8s api, provide status of nodes and artifacts
 * **UI (React)** — click to generate, watch queues and completion.
@@ -35,7 +33,7 @@ Note: Scheduling with kueue not glued yet
 * **CRD kind**: `Enchantment` (the desired item and its essence needs).
 * **Anvils (nodes)**: specialized workers; each one is aligned to Fire/Frost/Arcane.
 * **Mana**: resource of the anvil. 5 Frost essence created by 5 Mana by frost node.
-* **Statuses**: `Scheduled → Enchanting → Requeued → (Preempted?) → Completed`.
+* **Statuses**: `Scheduled → Enchanting → Requeued → Enchanting → Completed/Failed`.
 
 ---
 
