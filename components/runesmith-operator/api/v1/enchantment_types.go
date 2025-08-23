@@ -86,7 +86,7 @@ type EnchantmentStatus struct {
 
 	// +kubebuilder:validation:Enum=Scheduled;Enchanting;Failed;Completed;Requeued
 	// +kubebuilder:validation:Type=string
-	Phase shared.EnchantmentPhase `json:"phase"`
+	Phase shared.EnchantmentPhase `json:"phase,omitempty"`
 
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 	ExpiresAt      *metav1.Time `json:"expiresAt,omitempty"`

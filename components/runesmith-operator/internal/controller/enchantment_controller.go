@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -70,6 +71,7 @@ type EnchantmentReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
+	ptr := &ptrStatus{namespacedName: req.NamespacedName}
 
 	ench := &enchv1.Enchantment{}
 	err := r.Get(ctx, req.NamespacedName, ench)
@@ -100,11 +102,11 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return ctrl.Result{}, err
 		}
 		if len(jobs.Items) > 0 {
-			if !r.isJobEnchanting(&jobs) {
+			if !isJobEnchanting(&jobs) {
 				return ctrl.Result{}, nil
 			}
-			ench.Status.Phase = shared.EnchantingAS
-			if err = r.Status().Update(ctx, ench); err != nil {
+			ptr.phase = shared.EnchantingAS.Ptr()
+			if err = r.reconcileStatus(ctx, ptr); err != nil {
 				logger.Error(err, "failed to update Enchantment status", "from", shared.ScheduledAS, "to", shared.EnchantingAS)
 				return ctrl.Result{RequeueAfter: time.Second}, nil
 			}
@@ -112,7 +114,7 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 
 		// create jobs
-		return r.createJobs(ctx, ench)
+		return r.createJobs(ctx, ench, ptr)
 	case shared.EnchantingAS, shared.RequeuedAS:
 		// list jobs
 		var jobs batchv1.JobList
@@ -125,9 +127,9 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 		if len(jobs.Items) == 0 {
 			logger.Error(err, "unexpected items.len")
-			ench.Status.Phase = shared.FailedAS
-			r.markCompletion(ench)
-			if statusErr := r.Status().Update(ctx, ench); statusErr != nil {
+			ptr.phase = shared.FailedAS.Ptr()
+			markCompletion(ench, ptr)
+			if statusErr := r.reconcileStatus(ctx, ptr); statusErr != nil {
 				logger.Error(statusErr, "failed to update Enchantment status", "from", ench.Status.Phase, "to", shared.FailedAS)
 				return ctrl.Result{RequeueAfter: time.Second}, nil
 			}
@@ -160,10 +162,11 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			}
 		}
 
-		ench.Status.SucceededJobs = completedCount
-		ench.Status.FailedJobs = failedCount
-		ench.Status.ActiveJobs = activeCount
-		ench.Status.Progress = fmt.Sprintf("%d/%d", completedCount, len(ench.Spec.Artifact.Requirements))
+		progress := fmt.Sprintf("%d/%d", completedCount, len(ench.Spec.Artifact.Requirements))
+		ptr.successful = &completedCount
+		ptr.failed = &failedCount
+		ptr.active = &activeCount
+		ptr.progress = &progress
 		var state shared.EnchantmentPhase
 
 		switch {
@@ -171,12 +174,12 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			// any job failed means enchantment failed, maybe we can work on detailed reconicle
 			state = shared.FailedAS
 			logger.Info("enchantment failed", "name", ench.Name, "failed jobs", failedCount)
-			r.markCompletion(ench)
+			markCompletion(ench, ptr)
 		case completedCount == len(jobs.Items):
 			// all jobs completed successfully
 			state = shared.CompletedAS
 			logger.Info("enchantment completed", "name", ench.Name)
-			r.markCompletion(ench)
+			markCompletion(ench, ptr)
 		case suspendedCount > 0:
 			// any job suspended/requeued means enchantment is requeued
 			state = shared.RequeuedAS
@@ -188,8 +191,8 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			state = shared.EnchantingAS
 		}
 
-		ench.Status.Phase = state
-		if err = r.Status().Update(ctx, ench); err != nil {
+		ptr.phase = state.Ptr()
+		if err = r.reconcileStatus(ctx, ptr); err != nil {
 			logger.Error(err, "failed to update Enchantment status", "from", ench.Status.Phase, "to", state)
 			return ctrl.Result{RequeueAfter: time.Second}, nil
 		}
@@ -200,8 +203,8 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	case shared.FailedAS, shared.CompletedAS:
 		if ench.Status.ExpiresAt == nil {
-			r.markCompletion(ench)
-			if err = r.Status().Update(ctx, ench); err != nil {
+			markCompletion(ench, ptr)
+			if err = r.reconcileStatus(ctx, ptr); err != nil {
 				logger.Error(err, "failed to update Enchantment ttl")
 				return ctrl.Result{RequeueAfter: time.Second}, nil
 			}
@@ -224,36 +227,14 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-func (r *EnchantmentReconciler) isJobEnchanting(jobs *batchv1.JobList) bool {
-	for i := range jobs.Items {
-		if jobs.Items[i].Spec.Suspend != nil && *jobs.Items[i].Spec.Suspend {
-			return false
-		}
-	}
-	return true
-}
-
-func (r *EnchantmentReconciler) markCompletion(enchantment *enchv1.Enchantment) {
-	if enchantment.Status.CompletionTime != nil {
-		return
-	}
-	now := time.Now()
-	if enchantment.Spec.Retention.TTLSecondsAfterFinished != nil {
-		ttl := metav1.NewTime(now.Add(time.Duration(*enchantment.Spec.Retention.TTLSecondsAfterFinished) * time.Second))
-		enchantment.Status.ExpiresAt = &ttl
-	}
-	nowT := metav1.NewTime(now)
-	enchantment.Status.CompletionTime = &nowT
-}
-
 // createJob creates a new Job for the Enchantment
-func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enchv1.Enchantment) (ctrl.Result, error) {
+func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enchv1.Enchantment, ptr *ptrStatus) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
 	for i, ess := range enchantment.Spec.Artifact.Requirements {
-		jobNameStub := r.generateJobName(enchantment, ess.EnergyType)
-		nodeSelector := r.determineNodeSelector(&ess) // redundant
-		tolerations := r.determineTolerations(&ess)
+		jobNameStub := generateJobName(enchantment, ess.EnergyType)
+		nodeSelector := determineNodeSelector(&ess) // redundant
+		tolerations := determineTolerations(&ess)
 		suspend := true // TODO kueue expects on suspend
 		backOff := int32(0)
 
@@ -357,10 +338,12 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 		if err := r.Create(ctx, job); err != nil {
 			r.Recorder.Eventf(enchantment, corev1.EventTypeWarning, "JobCreateFailed", "Error: %v", err)
 			logger.Error(err, "Failed to create Job")
-			enchantment.Status.Phase = shared.FailedAS
-			enchantment.Status.Progress = fmt.Sprintf("%d/%d", i+1, len(enchantment.Spec.Artifact.Requirements))
-			r.markCompletion(enchantment)
-			if statusErr := r.Status().Update(ctx, enchantment); statusErr != nil {
+
+			progress := fmt.Sprintf("%d/%d", i+1, len(enchantment.Spec.Artifact.Requirements))
+			ptr.phase = shared.FailedAS.Ptr()
+			ptr.progress = &progress
+			markCompletion(enchantment, ptr)
+			if statusErr := r.reconcileStatus(ctx, ptr); statusErr != nil {
 				logger.Error(statusErr, "Failed to update Enchantment status")
 			}
 			return ctrl.Result{}, err
@@ -369,8 +352,9 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 		logger.Info("Successfully created Job", "job", job.Name)
 	}
 
-	enchantment.Status.Progress = fmt.Sprintf("%d/%d", 0, len(enchantment.Spec.Artifact.Requirements))
-	if err := r.Status().Update(ctx, enchantment); err != nil {
+	progress := fmt.Sprintf("%d/%d", 0, len(enchantment.Spec.Artifact.Requirements))
+	ptr.progress = &progress
+	if err := r.reconcileStatus(ctx, ptr); err != nil {
 		logger.Error(err, "Failed to update Enchantment status")
 		return ctrl.Result{}, err
 	}
@@ -378,23 +362,44 @@ func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enc
 	return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 }
 
-func (r *EnchantmentReconciler) determineNodeSelector(req *enchv1.EnchantmentSpecArtifactRequirement) map[string]string {
-	nodeSelector := make(map[string]string)
-	nodeSelector[lblKeyEnergy] = req.EnergyType.String()
-	return nodeSelector
-}
+// reconcileStatus patches sub resource Status. status.Phase is required
+func (r *EnchantmentReconciler) reconcileStatus(ctx context.Context, p *ptrStatus) error {
+	if p.phase == nil {
+		return fmt.Errorf("reconcileStatus failed: missing phase")
+	}
+	if err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		var ench enchv1.Enchantment
+		if err := r.Client.Get(ctx, p.namespacedName, &ench); err != nil {
+			return err
+		}
+		original := ench.DeepCopy()
 
-func (r *EnchantmentReconciler) determineTolerations(req *enchv1.EnchantmentSpecArtifactRequirement) []corev1.Toleration {
-	return []corev1.Toleration{{
-		Key:      lblKeyEnergy,
-		Operator: corev1.TolerationOpEqual,
-		Value:    req.EnergyType.String(),
-		Effect:   corev1.TaintEffectNoSchedule,
-	}}
-}
+		ench.Status.Phase = *p.phase
+		if p.expiresAt != nil {
+			ench.Status.ExpiresAt = p.expiresAt
+		}
+		if p.active != nil {
+			ench.Status.ActiveJobs = *p.active
+		}
+		if p.failed != nil {
+			ench.Status.FailedJobs = *p.failed
+		}
+		if p.progress != nil {
+			ench.Status.Progress = *p.progress
+		}
+		if p.completionTime != nil {
+			ench.Status.CompletionTime = p.completionTime
+		}
+		if p.successful != nil {
+			ench.Status.SucceededJobs = *p.successful
+		}
 
-func (r *EnchantmentReconciler) generateJobName(enchantment *enchv1.Enchantment, energyType shared.Elemental) string {
-	return fmt.Sprintf("ejob-%d-%s-", enchantment.Spec.OrderID, energyType)
+		return r.Client.Status().Patch(ctx, &ench, client.MergeFrom(original))
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

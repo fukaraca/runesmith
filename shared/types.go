@@ -104,6 +104,10 @@ func (p EnchantmentPhase) String() string {
 	return string(p)
 }
 
+func (p EnchantmentPhase) Ptr() *EnchantmentPhase {
+	return &p
+}
+
 type NodeStatus struct {
 	Name        string
 	Available   int

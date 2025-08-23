@@ -152,7 +152,6 @@ spec:
             required:
             - activeJobs
             - failedJobs
-            - phase
             - succeededJobs
             type: object
         required:
