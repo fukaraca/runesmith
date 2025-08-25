@@ -374,7 +374,7 @@ const App: React.FC = () => {
                 </div>
 
                 <section className="mb-8">
-                    <div className="mb-3 text-sm font-semibold">Nodes</div>
+                    <div className="mb-3 text-sm font-semibold">Foundry(~nodes)</div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {nodeStatuses.map(ns => <NodeCard key={ns.Name} s={ns} />)}
                         {nodeStatuses.length === 0 && (
@@ -437,7 +437,7 @@ priority: 2`}</code></pre>
                         <li>The backend creates an <code>Enchantment</code> (CRD) representing that order.</li>
                         <li>The Operator notices the new Enchantment and spawns the required Jobs:
                             <b> 6x</b> represented as time consuming job on <code className="mx-1">Fire</code> tainted node.</li>
-                        <li>Kueue schedules(not implemented yet though, for now no preemption/prioritization) those Jobs based on available Mana; higher tiers (Legendary) carry higher priority and can preempt queued lower-tier work.</li>
+                        <li>Kueue schedules those Jobs based on available Mana; higher tiers (Legendary) carry higher priority and can preempt queued lower-tier work.</li>
                         <li>Each node’s Device Plugin advertises its Mana inventory to kubelet(eg Nvidia GPU nodes vs AMD GPU nodes); Jobs consume the matching resource while running.</li>
                         <li>As Jobs finish, Mana is released; Enchantment(CR) status updated; the backend tracks completion and the UI updates live.</li>
                         <li>When all required essences are done, the Enchantment is marked <code>Completed</code>.</li>
@@ -446,10 +446,10 @@ priority: 2`}</code></pre>
                     <h4>How to read the UI</h4>
                     <ul>
                         <li><strong>Forge</strong>: submit a new Enchantment (random item).</li>
-                        <li><strong>Items</strong>: view the catalog (requirements per energy).</li>
+                        <li><strong>List of possible items</strong>: view the catalog (requirements per energy).</li>
                         <li><strong>Artifacts</strong>: see live orders and statuses
-                            (<code>Scheduled</code>, <code>Queued</code>, <code>Preempted</code>, <code>Prioritized</code>, <code>Completed</code>).</li>
-                        <li><strong>Mana</strong>: real-time availability and allocation per node and energy type.</li>
+                            (<code>Scheduled</code>, <code>Enchanting</code>, <code>Requeued</code>, <code>Failed</code>, <code>Completed</code>).</li>
+                        <li><strong>Nodes</strong>: real-time availability and allocation per node and energy type.</li>
                     </ul>
 
                     <p className="text-xs">
