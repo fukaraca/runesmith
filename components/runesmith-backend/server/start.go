@@ -57,6 +57,7 @@ func Start(cfg *config.Config) error {
 		}
 	}
 	server.Service.Tracker.Stop()
+	server.Service.StatusPoller.Stop()
 	logger.Info("Server shutting down")
 	return nil
 }

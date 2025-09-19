@@ -15,16 +15,26 @@ import (
 const statusAPIPlugin = "v1/status"
 
 func (s *Service) Status(ctx context.Context) ([]shared.NodeStatus, error) {
-	logger := middlewares.GetLoggerFromContext(ctx)
+	s.StatusPoller.Ping()
+	if v := s.StatusPoller.Latest(); v != nil {
+		return v, nil
+	}
+	// as fallback get status directly
+	return s.StatusGetter(ctx)
+}
+
+func (s *Service) StatusGetter(ctx context.Context) ([]shared.NodeStatus, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
+	logger := middlewares.GetLoggerFromContext(ctx)
 	out := make([]shared.NodeStatus, len(s.plugin.Services))
 	p := s.plugin
+
 	for i := 0; i < len(p.Services); i++ {
 		url := fmt.Sprintf("http://%s:%s/%s", p.Services[i], p.Port, statusAPIPlugin)
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
-			logger.Error("NewRequestWithContext failed", err)
+			logger.Error("StatusGetter.NewRequestWithContext failed", err)
 			continue
 		}
 		resp, err := http.DefaultClient.Do(req)
