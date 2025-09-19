@@ -31,7 +31,7 @@ type StatusPoller struct {
 func NewStatusPoller(getter func(ctx context.Context, logger *slog.Logger) ([]shared.NodeStatus, error), interval, idleTimeout time.Duration) *StatusPoller {
 	return &StatusPoller{
 		interval:    interval,
-		logger:      slog.Default().With("status poller"),
+		logger:      slog.Default().With("service", "status poller"),
 		rttTimeout:  time.Second * 5,
 		idleTimeout: idleTimeout,
 		getter:      getter,
