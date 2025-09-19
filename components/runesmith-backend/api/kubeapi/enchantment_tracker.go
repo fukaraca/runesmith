@@ -11,7 +11,9 @@ import (
 	"github.com/fukaraca/runesmith/shared"
 	"k8s.io/apimachinery/pkg/api/equality"
 	cache2 "k8s.io/client-go/tools/cache"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 type EnchantmentTracker struct {
@@ -26,6 +28,7 @@ type EnchantmentTracker struct {
 }
 
 func NewEnchantmentTracker(c *Client, meta *config.Meta, logger *slog.Logger, art *artifactory.Artifactory) (*EnchantmentTracker, error) {
+	controllerruntime.SetLogger(zap.New())
 	cc, err := cache.New(c.restConfig, cache.Options{
 		Scheme: c.scheme,
 		DefaultNamespaces: map[string]cache.Config{
