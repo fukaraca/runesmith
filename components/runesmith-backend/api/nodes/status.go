@@ -2,10 +2,10 @@ package nodes
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
-	"github.com/fukaraca/runesmith/components/runesmith-backend/server/middlewares"
 	"github.com/fukaraca/runesmith/shared"
 )
 
@@ -18,18 +18,20 @@ type StatusPoller struct {
 	interval    time.Duration
 	idleTimeout time.Duration
 	rttTimeout  time.Duration
+	logger      *slog.Logger
 
 	lastSeen time.Time
 
 	latestMu sync.RWMutex
 	latest   []shared.NodeStatus
 
-	getter func(ctx context.Context) ([]shared.NodeStatus, error)
+	getter func(ctx context.Context, logger *slog.Logger) ([]shared.NodeStatus, error)
 }
 
-func NewStatusPoller(getter func(ctx context.Context) ([]shared.NodeStatus, error), interval, idleTimeout time.Duration) *StatusPoller {
+func NewStatusPoller(getter func(ctx context.Context, logger *slog.Logger) ([]shared.NodeStatus, error), interval, idleTimeout time.Duration) *StatusPoller {
 	return &StatusPoller{
 		interval:    interval,
+		logger:      slog.Default().With("status poller"),
 		rttTimeout:  time.Second * 5,
 		idleTimeout: idleTimeout,
 		getter:      getter,
@@ -90,11 +92,12 @@ func (p *StatusPoller) fetchOnce(ctx context.Context) {
 	// short timeout per round
 	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	out, err := p.getter(cctx)
+	out, err := p.getter(cctx, p.logger)
 	if err != nil {
-		middlewares.GetLoggerFromContext(ctx).Error("status poller fetch error:", err)
+		p.logger.Error("status poller fetch error:", err)
 		return
 	}
+	p.logger.Info("statuses updated")
 	p.latestMu.Lock()
 	p.latest = out
 	p.latestMu.Unlock()

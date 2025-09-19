@@ -20,13 +20,12 @@ func (s *Service) Status(ctx context.Context) ([]shared.NodeStatus, error) {
 		return v, nil
 	}
 	// as fallback get status directly
-	return s.StatusGetter(ctx)
+	return s.StatusGetter(ctx, middlewares.GetLoggerFromContext(ctx))
 }
 
-func (s *Service) StatusGetter(ctx context.Context) ([]shared.NodeStatus, error) {
+func (s *Service) StatusGetter(ctx context.Context, logger *slog.Logger) ([]shared.NodeStatus, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	logger := middlewares.GetLoggerFromContext(ctx)
 	out := make([]shared.NodeStatus, len(s.plugin.Services))
 	p := s.plugin
 
