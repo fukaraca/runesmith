@@ -151,5 +151,8 @@ func isFailed(j *batchv1.Job) bool {
 			return true
 		}
 	}
-	return j.Status.Failed > 0
+	if j.Spec.BackoffLimit != nil && j.Status.Failed >= *j.Spec.BackoffLimit && j.Status.Active == 0 {
+		return true
+	}
+	return false
 }

@@ -54,7 +54,22 @@ func generateJobName(enchantment *enchv1.Enchantment, reqIndex int, energyType s
 	if uid == "" {
 		uid = enchantment.Name
 	}
-	return fmt.Sprintf("ejob-%s-%d-%s", energyType, reqIndex, uid)
+	return fmt.Sprintf("ejob-%d-%s-%d-%s", enchantment.Spec.OrderID, energyType, reqIndex, uid)
+}
+
+func isJobFailed(job *batchv1.Job) bool {
+	if job == nil {
+		return false
+	}
+	for _, c := range job.Status.Conditions {
+		if c.Type == batchv1.JobFailed && c.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	if job.Spec.BackoffLimit != nil && job.Status.Failed >= *job.Spec.BackoffLimit && job.Status.Active == 0 {
+		return true
+	}
+	return false
 }
 
 func isJobEnchanting(jobs []*batchv1.Job) bool {

@@ -69,7 +69,7 @@ func (c *Client) CreateEnchantment(
 		})
 	}
 
-	ttl := 5
+	ttl := 300
 	selfReport := true
 
 	enchantment := &enchantmentv1.Enchantment{

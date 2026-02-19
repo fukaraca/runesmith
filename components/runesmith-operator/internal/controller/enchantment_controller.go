@@ -158,7 +158,7 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				completedCount++
 				continue
 			}
-			if job.Status.Failed > 0 {
+			if isJobFailed(job) {
 				r.Recorder.Eventf(ench, corev1.EventTypeWarning, "JobFailed", "Job %s failed", job.Name)
 				failedCount++
 				continue
@@ -266,7 +266,7 @@ func (r *EnchantmentReconciler) ensureJobs(ctx context.Context, enchantment *enc
 
 func matchJobs(enchantment *enchv1.Enchantment, jobs *batchv1.JobList) ([]*batchv1.Job, int) {
 	jobsByName := make(map[string]*batchv1.Job, len(jobs.Items))
-	jobsByEnergy := make(map[string]*batchv1.Job, len(jobs.Items))
+	jobsByEnergy := make(map[string][]*batchv1.Job, len(jobs.Items))
 	for i := range jobs.Items {
 		job := &jobs.Items[i]
 		jobsByName[job.Name] = job
@@ -274,9 +274,7 @@ func matchJobs(enchantment *enchv1.Enchantment, jobs *batchv1.JobList) ([]*batch
 		if energy == "" {
 			continue
 		}
-		if _, exists := jobsByEnergy[energy]; !exists {
-			jobsByEnergy[energy] = job
-		}
+		jobsByEnergy[energy] = append(jobsByEnergy[energy], job)
 	}
 
 	matched := make([]*batchv1.Job, len(enchantment.Spec.Artifact.Requirements))
@@ -286,8 +284,10 @@ func matchJobs(enchantment *enchv1.Enchantment, jobs *batchv1.JobList) ([]*batch
 		job := jobsByName[expectedName]
 		if job == nil {
 			energyKey := req.EnergyType.String()
-			job = jobsByEnergy[energyKey]
-			delete(jobsByEnergy, energyKey)
+			if fallback := jobsByEnergy[energyKey]; len(fallback) > 0 {
+				job = fallback[0]
+				jobsByEnergy[energyKey] = fallback[1:]
+			}
 			missing++
 		}
 		matched[i] = job
