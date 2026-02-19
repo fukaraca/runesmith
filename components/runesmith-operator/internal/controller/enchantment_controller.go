@@ -93,7 +93,6 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	switch phase {
 	case shared.ScheduledAS:
-		// check jobs doesn't exist
 		var jobs batchv1.JobList
 		if err = r.List(ctx, &jobs,
 			client.InNamespace(ench.Namespace),
@@ -101,22 +100,34 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		); err != nil {
 			return ctrl.Result{}, err
 		}
-		if len(jobs.Items) > 0 {
-			if !isJobEnchanting(&jobs) {
-				return ctrl.Result{}, nil
-			}
-			ptr.phase = shared.EnchantingAS.Ptr()
-			if err = r.reconcileStatus(ctx, ptr); err != nil {
-				logger.Error(err, "failed to update Enchantment status", "from", shared.ScheduledAS, "to", shared.EnchantingAS)
-				return ctrl.Result{RequeueAfter: time.Second}, nil
-			}
-			return ctrl.Result{}, nil
+		matchedJobs, needsRequeue, err := r.ensureJobs(ctx, ench, &jobs)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
-
-		// create jobs
-		return r.createJobs(ctx, ench, ptr)
+		if needsRequeue {
+			if ench.Status.Progress == "" {
+				progress := fmt.Sprintf("%d/%d", 0, len(ench.Spec.Artifact.Requirements))
+				ptr.phase = shared.ScheduledAS.Ptr()
+				ptr.progress = &progress
+				if err = r.reconcileStatus(ctx, ptr); err != nil {
+					logger.Error(err, "failed to update Enchantment status", "from", shared.ScheduledAS, "to", shared.ScheduledAS)
+					return ctrl.Result{RequeueAfter: time.Second}, nil
+				}
+			}
+			return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
+		}
+		if !isJobEnchanting(matchedJobs) {
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		}
+		ptr.phase = shared.EnchantingAS.Ptr()
+		progress := fmt.Sprintf("%d/%d", 0, len(ench.Spec.Artifact.Requirements))
+		ptr.progress = &progress
+		if err = r.reconcileStatus(ctx, ptr); err != nil {
+			logger.Error(err, "failed to update Enchantment status", "from", shared.ScheduledAS, "to", shared.EnchantingAS)
+			return ctrl.Result{RequeueAfter: time.Second}, nil
+		}
+		return ctrl.Result{}, nil
 	case shared.EnchantingAS, shared.RequeuedAS:
-		// list jobs
 		var jobs batchv1.JobList
 		if err = r.List(ctx, &jobs,
 			client.InNamespace(ench.Namespace),
@@ -124,45 +135,41 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		); err != nil {
 			return ctrl.Result{}, err
 		}
-
-		if len(jobs.Items) == 0 {
-			logger.Error(err, "unexpected items.len")
-			ptr.phase = shared.FailedAS.Ptr()
-			markCompletion(ench, ptr)
-			if statusErr := r.reconcileStatus(ctx, ptr); statusErr != nil {
-				logger.Error(statusErr, "failed to update Enchantment status", "from", ench.Status.Phase, "to", shared.FailedAS)
-				return ctrl.Result{RequeueAfter: time.Second}, nil
-			}
-			return ctrl.Result{}, fmt.Errorf("unexpected items.len")
+		matchedJobs, needsRequeue, err := r.ensureJobs(ctx, ench, &jobs)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		if needsRequeue {
+			return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
 		}
 
 		var completedCount, failedCount, activeCount, suspendedCount int
-
-		for _, job := range jobs.Items {
-			if job.Status.Failed > 0 {
-				r.Recorder.Eventf(ench, corev1.EventTypeWarning, "JobFailed", "Job %s failed", job.Name)
-				failedCount++
+		for _, job := range matchedJobs {
+			if job == nil {
 				continue
 			}
-
-			if job.Status.Succeeded > 0 && job.Status.Active == 0 {
-				r.Recorder.Eventf(ench, corev1.EventTypeNormal, "JobSucceeded", "Job %s succeeded", job.Name)
-				completedCount++
-				continue
-			}
-
 			if job.Spec.Suspend != nil && *job.Spec.Suspend {
 				r.Recorder.Eventf(ench, corev1.EventTypeNormal, "JobSuspended", "Job %s suspended", job.Name)
 				suspendedCount++
 				continue
 			}
-
+			if job.Status.Succeeded > 0 && job.Status.Active == 0 {
+				r.Recorder.Eventf(ench, corev1.EventTypeNormal, "JobSucceeded", "Job %s succeeded", job.Name)
+				completedCount++
+				continue
+			}
+			if job.Status.Failed > 0 {
+				r.Recorder.Eventf(ench, corev1.EventTypeWarning, "JobFailed", "Job %s failed", job.Name)
+				failedCount++
+				continue
+			}
 			if job.Status.Active > 0 {
 				activeCount++
 			}
 		}
 
-		progress := fmt.Sprintf("%d/%d", completedCount, len(ench.Spec.Artifact.Requirements))
+		expectedJobs := len(ench.Spec.Artifact.Requirements)
+		progress := fmt.Sprintf("%d/%d", completedCount, expectedJobs)
 		ptr.successful = &completedCount
 		ptr.failed = &failedCount
 		ptr.active = &activeCount
@@ -171,17 +178,14 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 		switch {
 		case failedCount > 0:
-			// any job failed means enchantment failed, maybe we can work on detailed reconicle
 			state = shared.FailedAS
 			logger.Info("enchantment failed", "name", ench.Name, "failed jobs", failedCount)
 			markCompletion(ench, ptr)
-		case completedCount == len(jobs.Items):
-			// all jobs completed successfully
+		case completedCount == expectedJobs:
 			state = shared.CompletedAS
 			logger.Info("enchantment completed", "name", ench.Name)
 			markCompletion(ench, ptr)
 		case suspendedCount > 0:
-			// any job suspended/requeued means enchantment is requeued
 			state = shared.RequeuedAS
 			logger.Info("enchantment requeued", "name", ench.Name)
 		default:
@@ -227,140 +231,168 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-// createJob creates a new Job for the Enchantment
-func (r *EnchantmentReconciler) createJobs(ctx context.Context, enchantment *enchv1.Enchantment, ptr *ptrStatus) (ctrl.Result, error) {
+func (r *EnchantmentReconciler) ensureJobs(ctx context.Context, enchantment *enchv1.Enchantment, jobs *batchv1.JobList) ([]*batchv1.Job, bool, error) {
 	logger := log.FromContext(ctx)
+	matchedJobs, missing := matchJobs(enchantment, jobs)
+	if missing == 0 {
+		return matchedJobs, false, nil
+	}
+	needsRequeue := true
 
-	for i, ess := range enchantment.Spec.Artifact.Requirements {
-		jobNameStub := generateJobName(enchantment, ess.EnergyType)
-		nodeSelector := determineNodeSelector(&ess) // redundant
-		tolerations := determineTolerations(&ess)
-		suspend := true // TODO kueue expects on suspend
-		backOff := int32(0)
+	for i, job := range matchedJobs {
+		if job != nil {
+			continue
+		}
+		req := enchantment.Spec.Artifact.Requirements[i]
+		newJob := r.buildJob(enchantment, i, req)
+		if err := controllerutil.SetControllerReference(enchantment, newJob, r.Scheme); err != nil {
+			logger.Error(err, "failed to set owner reference on Job")
+			return matchedJobs, needsRequeue, err
+		}
+		if err := r.Create(ctx, newJob); err != nil {
+			if errors.IsAlreadyExists(err) {
+				continue
+			}
+			r.Recorder.Eventf(enchantment, corev1.EventTypeWarning, "JobCreateFailed", "Error: %v", err)
+			logger.Error(err, "failed to create Job")
+			return matchedJobs, needsRequeue, err
+		}
+		r.Recorder.Eventf(enchantment, corev1.EventTypeNormal, "JobCreated", "Job %s created", newJob.Name)
+		logger.Info("successfully created Job", "job", newJob.Name)
+	}
 
-		job := &batchv1.Job{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: jobNameStub,
-				Namespace:    enchantment.Namespace,
-				Labels: map[string]string{
-					lblKeyEnergy:                           ess.EnergyType.String(),
-					lblKeyWorkload:                         "enchantment",
-					"artifact-order-id":                    strconv.Itoa(enchantment.Spec.OrderID),
-					"kueue.x-k8s.io/queue-name":            localKueue,
-					"kueue.x-k8s.io/priority-class":        enchantment.Spec.Artifact.Tier.Lower(),
-					"kueue.x-k8s.io/max-exec-time-seconds": "360",
-				},
+	return matchedJobs, needsRequeue, nil
+}
+
+func matchJobs(enchantment *enchv1.Enchantment, jobs *batchv1.JobList) ([]*batchv1.Job, int) {
+	jobsByName := make(map[string]*batchv1.Job, len(jobs.Items))
+	jobsByEnergy := make(map[string]*batchv1.Job, len(jobs.Items))
+	for i := range jobs.Items {
+		job := &jobs.Items[i]
+		jobsByName[job.Name] = job
+		energy := job.Labels[lblKeyEnergy]
+		if energy == "" {
+			continue
+		}
+		if _, exists := jobsByEnergy[energy]; !exists {
+			jobsByEnergy[energy] = job
+		}
+	}
+
+	matched := make([]*batchv1.Job, len(enchantment.Spec.Artifact.Requirements))
+	missing := 0
+	for i, req := range enchantment.Spec.Artifact.Requirements {
+		expectedName := generateJobName(enchantment, i, req.EnergyType)
+		job := jobsByName[expectedName]
+		if job == nil {
+			energyKey := req.EnergyType.String()
+			job = jobsByEnergy[energyKey]
+			delete(jobsByEnergy, energyKey)
+			missing++
+		}
+		matched[i] = job
+	}
+	return matched, missing
+}
+
+func (r *EnchantmentReconciler) buildJob(enchantment *enchv1.Enchantment, reqIndex int, ess enchv1.EnchantmentSpecArtifactRequirement) *batchv1.Job {
+	jobName := generateJobName(enchantment, reqIndex, ess.EnergyType)
+	nodeSelector := determineNodeSelector(&ess)
+	tolerations := determineTolerations(&ess)
+	suspend := true
+	backOff := int32(2)
+
+	return &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      jobName,
+			Namespace: enchantment.Namespace,
+			Labels: map[string]string{
+				lblKeyEnergy:                           ess.EnergyType.String(),
+				lblKeyWorkload:                         "enchantment",
+				"artifact-order-id":                    strconv.Itoa(enchantment.Spec.OrderID),
+				"kueue.x-k8s.io/queue-name":            localKueue,
+				"kueue.x-k8s.io/priority-class":        enchantment.Spec.Artifact.Tier.Lower(),
+				"kueue.x-k8s.io/max-exec-time-seconds": "360",
 			},
-			Spec: batchv1.JobSpec{
-				Suspend:      &suspend,
-				BackoffLimit: &backOff,
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{
-							lblKeyEnergy:        ess.EnergyType.String(),
-							lblKeyWorkload:      "enchantment",
-							"artifact-order-id": strconv.Itoa(enchantment.Spec.OrderID),
-						},
+		},
+		Spec: batchv1.JobSpec{
+			Suspend:      &suspend,
+			BackoffLimit: &backOff,
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						lblKeyEnergy:        ess.EnergyType.String(),
+						lblKeyWorkload:      "enchantment",
+						"artifact-order-id": strconv.Itoa(enchantment.Spec.OrderID),
 					},
-					Spec: corev1.PodSpec{
-						RestartPolicy: corev1.RestartPolicyNever,
-						NodeSelector:  nodeSelector,
-						Tolerations:   tolerations,
-						Containers: []corev1.Container{
-							{
-								Name:            "runesmith-enchanter",
-								Image:           r.Image,
-								ImagePullPolicy: corev1.PullIfNotPresent,
-								Ports: []corev1.ContainerPort{
-									{Name: "http", ContainerPort: 8080}, // TODO Parameterize
-								},
-								Env: []corev1.EnvVar{
-									{
-										Name: "POD_UID",
-										ValueFrom: &corev1.EnvVarSource{
-											FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.uid"},
-										},
-									},
-									{
-										Name: "POD_NAME",
-										ValueFrom: &corev1.EnvVarSource{
-											FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
-										},
-									},
-									{
-										Name: "POD_NAMESPACE",
-										ValueFrom: &corev1.EnvVarSource{
-											FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"},
-										},
-									},
-									{Name: "ARTIFACT_ID", Value: strconv.Itoa(enchantment.Spec.Artifact.ID)},
-									{Name: "ENCHANTMENT_COST", Value: strconv.Itoa(enchantment.Spec.Cost)},
-									{Name: "SELF_REPORT", Value: strconv.FormatBool(*enchantment.Spec.SelfReport)},
-									{Name: "HTTP_PORT", Value: "8080"},
-								},
-								Resources: corev1.ResourceRequirements{
-									Limits: corev1.ResourceList{
-										corev1.ResourceName(ess.ResourceName): resource.MustParse(strconv.Itoa(ess.Limit)),
+				},
+				Spec: corev1.PodSpec{
+					RestartPolicy: corev1.RestartPolicyNever,
+					NodeSelector:  nodeSelector,
+					Tolerations:   tolerations,
+					Containers: []corev1.Container{
+						{
+							Name:            "runesmith-enchanter",
+							Image:           r.Image,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Ports: []corev1.ContainerPort{
+								{Name: "http", ContainerPort: 8080},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name: "POD_UID",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.uid"},
 									},
 								},
-								LivenessProbe: &corev1.Probe{
-									ProbeHandler: corev1.ProbeHandler{
-										HTTPGet: &corev1.HTTPGetAction{
-											Path: "/healthz",
-											Port: intstr.FromInt32(8080),
-										},
+								{
+									Name: "POD_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
 									},
-									InitialDelaySeconds: 2,
-									PeriodSeconds:       2,
 								},
-								ReadinessProbe: &corev1.Probe{
-									ProbeHandler: corev1.ProbeHandler{
-										HTTPGet: &corev1.HTTPGetAction{
-											Path: "/readyz",
-											Port: intstr.FromInt32(8080),
-										},
+								{
+									Name: "POD_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"},
 									},
-									InitialDelaySeconds: 2, // TODO Parameterize
-									PeriodSeconds:       1,
 								},
+								{Name: "ARTIFACT_ID", Value: strconv.Itoa(enchantment.Spec.Artifact.ID)},
+								{Name: "ENCHANTMENT_COST", Value: strconv.Itoa(enchantment.Spec.Cost)},
+								{Name: "SELF_REPORT", Value: strconv.FormatBool(*enchantment.Spec.SelfReport)},
+								{Name: "HTTP_PORT", Value: "8080"},
+							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceName(ess.ResourceName): resource.MustParse(strconv.Itoa(ess.Limit)),
+								},
+							},
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/healthz",
+										Port: intstr.FromInt32(8080),
+									},
+								},
+								InitialDelaySeconds: 2,
+								PeriodSeconds:       2,
+							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/readyz",
+										Port: intstr.FromInt32(8080),
+									},
+								},
+								InitialDelaySeconds: 2,
+								PeriodSeconds:       1,
 							},
 						},
 					},
 				},
 			},
-		}
-
-		if err := controllerutil.SetControllerReference(enchantment, job, r.Scheme); err != nil {
-			logger.Error(err, "Failed to set owner reference on Job")
-			return ctrl.Result{}, err
-		}
-
-		if err := r.Create(ctx, job); err != nil {
-			r.Recorder.Eventf(enchantment, corev1.EventTypeWarning, "JobCreateFailed", "Error: %v", err)
-			logger.Error(err, "Failed to create Job")
-
-			progress := fmt.Sprintf("%d/%d", i+1, len(enchantment.Spec.Artifact.Requirements))
-			ptr.phase = shared.FailedAS.Ptr()
-			ptr.progress = &progress
-			markCompletion(enchantment, ptr)
-			if statusErr := r.reconcileStatus(ctx, ptr); statusErr != nil {
-				logger.Error(statusErr, "Failed to update Enchantment status")
-			}
-			return ctrl.Result{}, err
-		}
-		r.Recorder.Eventf(enchantment, corev1.EventTypeNormal, "JobsCreated", "created %d jobs", len(enchantment.Spec.Artifact.Requirements))
-		logger.Info("Successfully created Job", "job", job.Name)
+		},
 	}
-
-	progress := fmt.Sprintf("%d/%d", 0, len(enchantment.Spec.Artifact.Requirements))
-	ptr.progress = &progress
-	ptr.phase = shared.ScheduledAS.Ptr()
-	if err := r.reconcileStatus(ctx, ptr); err != nil {
-		logger.Error(err, "Failed to update Enchantment status")
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 }
 
 // reconcileStatus patches sub resource Status. status.Phase is required

@@ -49,13 +49,23 @@ func determineTolerations(req *enchv1.EnchantmentSpecArtifactRequirement) []core
 	}}
 }
 
-func generateJobName(enchantment *enchv1.Enchantment, energyType shared.Elemental) string {
-	return fmt.Sprintf("ejob-%d-%s-", enchantment.Spec.OrderID, energyType)
+func generateJobName(enchantment *enchv1.Enchantment, reqIndex int, energyType shared.Elemental) string {
+	uid := string(enchantment.UID)
+	if uid == "" {
+		uid = enchantment.Name
+	}
+	return fmt.Sprintf("ejob-%s-%d-%s", energyType, reqIndex, uid)
 }
 
-func isJobEnchanting(jobs *batchv1.JobList) bool {
-	for i := range jobs.Items {
-		if jobs.Items[i].Spec.Suspend != nil && *jobs.Items[i].Spec.Suspend {
+func isJobEnchanting(jobs []*batchv1.Job) bool {
+	if len(jobs) == 0 {
+		return false
+	}
+	for i := range jobs {
+		if jobs[i] == nil {
+			return false
+		}
+		if jobs[i].Spec.Suspend != nil && *jobs[i].Spec.Suspend {
 			return false
 		}
 	}

@@ -40,7 +40,7 @@ dashboard-docker-build:
 
 #operator commands
 operator-run:
-	cd ./components/runesmith-dashboard && go run ./cmd/main.go
+	cd ./components/runesmith-operator && go run ./cmd/main.go
 operator-docker-build:
 	docker build --no-cache --debug -f components/runesmith-operator/Dockerfile --build-arg FULL_VERSION=$(VERSION_OPERATOR).0 -t runesmith-operator:latest .
 operator-helm-template:
