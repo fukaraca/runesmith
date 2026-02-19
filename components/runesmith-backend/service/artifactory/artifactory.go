@@ -10,13 +10,14 @@ import (
 
 // Artifact is produce order of the item.
 type Artifact struct {
-	ID        int
-	ItemID    int
-	ItemName  string
-	TaskID    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Status    shared.EnchantmentPhase
+	ID           int
+	ItemID       int
+	ItemName     string
+	TaskID       string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Status       shared.EnchantmentPhase
+	EnergyStates string
 }
 
 type Artifactory struct {
@@ -44,7 +45,7 @@ func (a *Artifactory) ScheduleNewArtifact(art *Artifact) {
 	a.pending.Store(next)
 }
 
-func (a *Artifactory) UpdatePendingArtifact(id string, status shared.EnchantmentPhase) {
+func (a *Artifactory) UpdatePendingArtifact(id string, status shared.EnchantmentPhase, energyStates string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -52,6 +53,7 @@ func (a *Artifactory) UpdatePendingArtifact(id string, status shared.Enchantment
 	for i := range pending {
 		if pending[i].TaskID == id {
 			pending[i].Status = status
+			pending[i].EnergyStates = energyStates
 			pending[i].UpdatedAt = time.Now()
 		}
 	}

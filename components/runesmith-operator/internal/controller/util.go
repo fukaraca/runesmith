@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	enchv1 "github.com/fukaraca/runesmith/components/runesmith-operator/api/v1"
@@ -18,6 +19,7 @@ type ptrStatus struct {
 	progress                   *string
 	expiresAt, completionTime  *metav1.Time
 	active, failed, successful *int
+	energyStates               *string
 }
 
 // markCompletion is helper to keep state uniform, it is planned to use only one reconcile and just before the reconcile
@@ -85,4 +87,45 @@ func isJobEnchanting(jobs []*batchv1.Job) bool {
 		}
 	}
 	return true
+}
+
+func jobEnergyState(job *batchv1.Job) shared.EnergyState {
+	switch {
+	case job == nil:
+		return shared.EnergyStatePending
+	case isJobFailed(job):
+		return shared.EnergyStateFailed
+	case job.Status.Succeeded > 0:
+		return shared.EnergyStateCompleted
+	case job.Spec.Suspend != nil && *job.Spec.Suspend:
+		return shared.EnergyStatePending
+	case job.Status.Active > 0:
+		return shared.EnergyStateEnchanting
+	default:
+		return shared.EnergyStatePending
+	}
+}
+
+func energyStatesSummary(reqs []enchv1.EnchantmentSpecArtifactRequirement, jobs []*batchv1.Job) string {
+	if len(reqs) == 0 {
+		return ""
+	}
+	states := make(map[shared.Elemental]shared.EnergyState, len(reqs))
+	for i, req := range reqs {
+		state := shared.EnergyStatePending
+		if i < len(jobs) {
+			state = jobEnergyState(jobs[i])
+		}
+		states[req.EnergyType] = state
+	}
+	order := []shared.Elemental{shared.FireEnergy, shared.FrostEnergy, shared.ArcaneEnergy}
+	parts := make([]string, 0, len(order))
+	for _, energy := range order {
+		state, ok := states[energy]
+		if !ok {
+			state = shared.EnergyStateNotApplicable
+		}
+		parts = append(parts, state.String())
+	}
+	return strings.Join(parts, ",")
 }

@@ -132,6 +132,8 @@ spec:
               completionTime:
                 format: date-time
                 type: string
+              energyStates:
+                type: string
               expiresAt:
                 format: date-time
                 type: string

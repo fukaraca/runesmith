@@ -88,6 +88,8 @@ type EnchantmentStatus struct {
 	// +kubebuilder:validation:Type=string
 	Phase shared.EnchantmentPhase `json:"phase,omitempty"`
 
+	EnergyStates string `json:"energyStates,omitempty"`
+
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 	ExpiresAt      *metav1.Time `json:"expiresAt,omitempty"`
 

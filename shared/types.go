@@ -108,6 +108,20 @@ func (p EnchantmentPhase) Ptr() *EnchantmentPhase {
 	return &p
 }
 
+type EnergyState string
+
+const (
+	EnergyStateEnchanting    EnergyState = "E"
+	EnergyStatePending       EnergyState = "P"
+	EnergyStateCompleted     EnergyState = "C"
+	EnergyStateFailed        EnergyState = "F"
+	EnergyStateNotApplicable EnergyState = "NA"
+)
+
+func (s EnergyState) String() string {
+	return string(s)
+}
+
 type NodeStatus struct {
 	Name        string
 	Available   int

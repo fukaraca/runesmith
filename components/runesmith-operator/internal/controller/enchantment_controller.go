@@ -104,6 +104,10 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+		energyStates := energyStatesSummary(ench.Spec.Artifact.Requirements, matchedJobs)
+		if energyStates != "" {
+			ptr.energyStates = &energyStates
+		}
 		if needsRequeue {
 			if ench.Status.Progress == "" {
 				progress := fmt.Sprintf("%d/%d", 0, len(ench.Spec.Artifact.Requirements))
@@ -174,6 +178,10 @@ func (r *EnchantmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		ptr.failed = &failedCount
 		ptr.active = &activeCount
 		ptr.progress = &progress
+		energyStates := energyStatesSummary(ench.Spec.Artifact.Requirements, matchedJobs)
+		if energyStates != "" {
+			ptr.energyStates = &energyStates
+		}
 		var state shared.EnchantmentPhase
 
 		switch {
@@ -408,6 +416,9 @@ func (r *EnchantmentReconciler) reconcileStatus(ctx context.Context, p *ptrStatu
 		original := ench.DeepCopy()
 
 		ench.Status.Phase = *p.phase
+		if p.energyStates != nil {
+			ench.Status.EnergyStates = *p.energyStates
+		}
 		if p.expiresAt != nil {
 			ench.Status.ExpiresAt = p.expiresAt
 		}

@@ -18,6 +18,7 @@ export interface Artifact {
     CreatedAt: string; // RFC3339 from Go
     UpdatedAt: string;
     Status: ArtifactStatus;
+    EnergyStates?: string;
 }
 
 export interface NodeStatus {
@@ -45,6 +46,27 @@ const ENERGY_HEX: Record<Energy, string> = {
     frost: "#007FFF",
     arcane: "#bc04bf",
 };
+
+const ENERGY_ORDER: Energy[] = ["fire", "frost", "arcane"];
+const ENERGY_LABEL: Record<Energy, string> = {
+    fire: "Fire",
+    frost: "Frost",
+    arcane: "Arcane",
+};
+
+const energyRequirementValue = (req: ItemRequirements | undefined, energy: Energy) => {
+    if (!req) return 0;
+    switch (energy) {
+        case "fire": return req.Fire ?? 0;
+        case "frost": return req.Frost ?? 0;
+        case "arcane": return req.Arcane ?? 0;
+        default: return 0;
+    }
+};
+
+const requirementEntries = (req?: ItemRequirements) => ENERGY_ORDER
+    .map((energy) => ({ energy, count: energyRequirementValue(req, energy) }))
+    .filter(({ count }) => count > 0);
 
 const energyFromNodeName = (name: string): Energy => {
     const n = (name || "").toLowerCase();
@@ -93,6 +115,24 @@ const rarityClass = (id?: number) => {
     if (id >= 11) return "text-green-600 dark:text-green-500 font-medium";    // Rare
     return "";                                                                // Common
 };
+
+const STATUS_STATE_META: Record<string, { label: string; className: string }> = {
+    E: { label: "Enchanting", className: "text-emerald-600" },
+    P: { label: "Pending", className: "text-amber-600" },
+    C: { label: "Completed", className: "text-sky-600" },
+    F: { label: "Failed", className: "text-rose-600" },
+    NA: { label: "Not required", className: "text-slate-400 dark:text-slate-500" },
+};
+
+const displayArtifactStatus = (status: ArtifactStatus) => {
+    if (status === "Requeued") return "Enchanting";
+    return status;
+};
+
+const parseEnergyStates = (detail?: string) => (detail || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 
 // ---------- Toasts ----------
@@ -237,7 +277,8 @@ const NodeCard: React.FC<{ s: NodeStatus }>= ({ s }) => {
 };
 
 // ---------- Lists ----------
-const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }> = ({ title, artifacts }) => (
+const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[]; itemRequirements: Map<number, ItemRequirements> }>
+    = ({ title, artifacts, itemRequirements }) => (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm bg-white dark:bg-slate-900">
         <div className="mb-3 text-sm font-semibold">{title}</div>
         <div className="overflow-x-auto">
@@ -252,24 +293,94 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[] }> = ({ ti
                 </tr>
                 </thead>
                 <tbody>
-                {artifacts.map((a) => (
-                    <tr key={a.ID} className="border-t border-slate-100 dark:border-slate-800">
-                        <td className="px-2 py-1 font-mono">{a.ID}</td>
-                        <td className="px-2 py-1">{a.ItemID}</td>
-                        <td className="px-2 py-1 w-[22rem] md:w-[30rem]">
-                <span
-                    className={`block truncate ${rarityClass(a.ItemID ?? 0)}`}
-                    title={a.ItemName ?? ""}
-                >
-                  {a.ItemName}
-                </span>
-                        </td>
-                        <td className="px-2 py-1">{a.Status}</td>
-                        <td className="px-2 py-1 text-slate-500 dark:text-slate-400">
-                            {new Date(a.CreatedAt).toLocaleString()}
-                        </td>
-                    </tr>
-                ))}
+                {artifacts.map((a) => {
+                    const requirements = itemRequirements.get(a.ItemID);
+                    const reqEntries = requirementEntries(requirements);
+                    const displayStatus = displayArtifactStatus(a.Status);
+                    const detailParts = parseEnergyStates(a.EnergyStates);
+                    const showDetail = displayStatus === "Enchanting" && detailParts.length > 0;
+                    const energySequence = reqEntries.length > 0
+                        ? reqEntries.map((req) => req.energy)
+                        : ENERGY_ORDER.slice(0, detailParts.length);
+                    const detailEntries = detailParts.map((state, index) => ({
+                        state,
+                        energy: energySequence[index] ?? ENERGY_ORDER[index] ?? ENERGY_ORDER[0],
+                    }));
+
+                    return (
+                        <tr key={a.ID} className="border-t border-slate-100 dark:border-slate-800">
+                            <td className="px-2 py-1 font-mono">{a.ID}</td>
+                            <td className="px-2 py-1">{a.ItemID}</td>
+                            <td className="px-2 py-1 w-[22rem] md:w-[30rem]">
+                                <div className="relative group">
+                                    <span
+                                        className={`block truncate ${rarityClass(a.ItemID ?? 0)}`}
+                                        title={a.ItemName ?? ""}
+                                    >
+                                        {a.ItemName}
+                                    </span>
+                                    {reqEntries.length > 0 && (
+                                        <div
+                                            className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden w-max rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-lg group-hover:block dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {reqEntries.map((req) => (
+                                                    <span
+                                                        key={req.energy}
+                                                        className="font-semibold"
+                                                        style={{ color: ENERGY_HEX[req.energy] }}
+                                                    >
+                                                        {req.count} {ENERGY_LABEL[req.energy]}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </td>
+                            <td className="px-2 py-1">
+                                <div className="relative inline-flex items-center gap-1 group">
+                                    <span>{displayStatus}</span>
+                                    {showDetail && (
+                                        <span className="text-xs font-semibold">
+                                            (
+                                            {detailEntries.map((entry, index) => (
+                                                <span
+                                                    key={`${entry.energy}-${index}`}
+                                                    className={STATUS_STATE_META[entry.state]?.className}
+                                                >
+                                                    {entry.state}{index < detailEntries.length - 1 ? "," : ""}
+                                                </span>
+                                            ))}
+                                            )
+                                        </span>
+                                    )}
+                                    {showDetail && detailEntries.length > 0 && (
+                                        <div
+                                            className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden w-max rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-lg group-hover:block dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                        >
+                                            <div className="flex flex-col gap-1">
+                                                {detailEntries.map((entry, index) => (
+                                                    <div key={`${entry.energy}-${index}`} className="flex items-center gap-2">
+                                                        <span className="font-semibold" style={{ color: ENERGY_HEX[entry.energy] }}>
+                                                            {ENERGY_LABEL[entry.energy]}
+                                                        </span>
+                                                        <span className={STATUS_STATE_META[entry.state]?.className}>
+                                                            {STATUS_STATE_META[entry.state]?.label ?? entry.state}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </td>
+                            <td className="px-2 py-1 text-slate-500 dark:text-slate-400">
+                                {new Date(a.CreatedAt).toLocaleString()}
+                            </td>
+                        </tr>
+                    );
+                })}
                 {artifacts.length === 0 && (
                     <tr>
                         <td colSpan={5} className="px-2 py-3 text-center text-slate-400 dark:text-slate-500">
@@ -295,6 +406,16 @@ const App: React.FC = () => {
     const [pending, setPending] = useState<Artifact[]>([]);
     const [completed, setCompleted] = useState<Artifact[]>([]);
     const [items, setItems] = useState<Item[]>([]);
+
+    const itemRequirements = useMemo(() => {
+        const map = new Map<number, ItemRequirements>();
+        for (const item of items) {
+            if (item.Requirements) {
+                map.set(item.ID, item.Requirements);
+            }
+        }
+        return map;
+    }, [items]);
 
     const hasRunning = useMemo(() => nodeStatuses.some(n => n.RunningJobs > 0), [nodeStatuses]);
     const hasPending = pending.length > 0;
@@ -361,7 +482,7 @@ const App: React.FC = () => {
         return () => clearInterval(id);
     }, [hasRunning, hasPending, fetchStatus, fetchArtifacts]);
 
-    useEffect(() => { if (itemsOpen) fetchItems(); }, [itemsOpen, fetchItems]);
+    useEffect(() => { fetchItems(); }, [fetchItems]);
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 flex flex-col">
@@ -384,10 +505,10 @@ const App: React.FC = () => {
                 </section>
 
                 <section className="mb-6">
-                    <ArtifactsTable title="Artifacts in Production" artifacts={pending} />
+                    <ArtifactsTable title="Artifacts in Production" artifacts={pending} itemRequirements={itemRequirements} />
                 </section>
                 <section className="mb-6">
-                    <ArtifactsTable title="Completed Orders" artifacts={completed} />
+                    <ArtifactsTable title="Completed Orders" artifacts={completed} itemRequirements={itemRequirements} />
                 </section>
             </main>
 
@@ -448,7 +569,9 @@ priority: 2`}</code></pre>
                         <li><strong>Forge</strong>: submit a new Enchantment (random item).</li>
                         <li><strong>List of possible items</strong>: view the catalog (requirements per energy).</li>
                         <li><strong>Artifacts</strong>: see live orders and statuses
-                            (<code>Scheduled</code>, <code>Enchanting</code>, <code>Requeued</code>, <code>Failed</code>, <code>Completed</code>).</li>
+                            (<code>Scheduled</code>, <code>Enchanting</code>, <code>Failed</code>, <code>Completed</code>). Hover a status to see
+                            per-energy detail (<code>E</code>=Enchanting, <code>P</code>=Pending, <code>C</code>=Completed, <code>F</code>=Failed,
+                            <code>NA</code>=Not required).</li>
                         <li><strong>Nodes</strong>: real-time availability and allocation per node and energy type.</li>
                     </ul>
 
