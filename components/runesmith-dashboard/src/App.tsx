@@ -65,8 +65,7 @@ const energyRequirementValue = (req: ItemRequirements | undefined, energy: Energ
 };
 
 const requirementEntries = (req?: ItemRequirements) => ENERGY_ORDER
-    .map((energy) => ({ energy, count: energyRequirementValue(req, energy) }))
-    .filter(({ count }) => count > 0);
+    .map((energy) => ({ energy, count: energyRequirementValue(req, energy) }));
 
 const energyFromNodeName = (name: string): Energy => {
     const n = (name || "").toLowerCase();
@@ -299,12 +298,9 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[]; itemRequi
                     const displayStatus = displayArtifactStatus(a.Status);
                     const detailParts = parseEnergyStates(a.EnergyStates);
                     const showDetail = displayStatus === "Enchanting" && detailParts.length > 0;
-                    const energySequence = reqEntries.length > 0
-                        ? reqEntries.map((req) => req.energy)
-                        : ENERGY_ORDER.slice(0, detailParts.length);
                     const detailEntries = detailParts.map((state, index) => ({
                         state,
-                        energy: energySequence[index] ?? ENERGY_ORDER[index] ?? ENERGY_ORDER[0],
+                        energy: ENERGY_ORDER[index] ?? ENERGY_ORDER[0],
                     }));
 
                     return (
@@ -320,15 +316,15 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[]; itemRequi
                                         {a.ItemName}
                                     </span>
                                     {reqEntries.length > 0 && (
-                                        <div
-                                            className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden w-max rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-lg group-hover:block dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                {reqEntries.map((req) => (
-                                                    <span
-                                                        key={req.energy}
-                                                        className="font-semibold"
-                                                        style={{ color: ENERGY_HEX[req.energy] }}
+                                            <div
+                                                className="pointer-events-none absolute left-0 bottom-full z-10 mb-1 hidden w-max rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-lg group-hover:block dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                            >
+                                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                                    {reqEntries.map((req) => (
+                                                        <span
+                                                            key={req.energy}
+                                                            className="font-semibold"
+                                                            style={{ color: ENERGY_HEX[req.energy] }}
                                                     >
                                                         {req.count} {ENERGY_LABEL[req.energy]}
                                                     </span>
@@ -357,7 +353,7 @@ const ArtifactsTable: React.FC<{ title: string; artifacts: Artifact[]; itemRequi
                                     )}
                                     {showDetail && detailEntries.length > 0 && (
                                         <div
-                                            className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden w-max rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-lg group-hover:block dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                            className="pointer-events-none absolute left-0 bottom-full z-10 mb-1 hidden w-max rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-lg group-hover:block dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                                         >
                                             <div className="flex flex-col gap-1">
                                                 {detailEntries.map((entry, index) => (
